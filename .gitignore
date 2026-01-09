@@ -1,0 +1,35 @@
+# Maven
+/target/
+/.log/
+/*.log
+/*.xml
+/.xml/
+
+# Eclipse / STS
+.project
+.classpath
+.settings/
+bin/
+
+# IntelliJ IDEA (au cas où)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# Backup / temp
+*~
