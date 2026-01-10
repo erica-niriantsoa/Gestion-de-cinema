@@ -9,7 +9,7 @@ public class TarifSeance {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "id_seance")
@@ -23,15 +23,14 @@ public class TarifSeance {
     @JoinColumn(name = "id_categorie_personne")
     private CategoriePersonne categoriePersonne;
 
-    @Column(nullable = false)
+    @Column(name = "prix", precision = 10, scale = 2, nullable = false)
     private BigDecimal prix;
 
-    // Getters and Setters
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

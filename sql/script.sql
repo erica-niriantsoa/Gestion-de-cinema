@@ -3,6 +3,21 @@ DROP DATABASE IF EXISTS cinema;
 CREATE DATABASE cinema;
 \c cinema;
 
+
+-- ------------------------------
+-- FILMS & categorieS
+-- ------------------------------
+CREATE TABLE film (
+    id SERIAL PRIMARY KEY,
+    titre TEXT NOT NULL,
+    description TEXT,
+    duree_minutes INT,
+    date_sortie DATE,
+    age_min INT DEFAULT 0, -- age minimum conseille
+    langue_originale TEXT -- langue du film);
+);
+
+
 -- ------------------------------
 -- TYPE DE PLACE
 -- ------------------------------
@@ -19,18 +34,6 @@ CREATE TABLE categorie_personne (
     libelle TEXT NOT NULL -- ADULTE, ENFANT, SENIOR...
 );
 
--- ------------------------------
--- FILMS & categorieS
--- ------------------------------
-CREATE TABLE film (
-    id SERIAL PRIMARY KEY,
-    titre TEXT NOT NULL,
-    description TEXT,
-    duree_minutes INT,
-    date_sortie DATE,
-    age_min INT DEFAULT 0, -- age minimum conseille
-    langue_originale TEXT -- langue du film);
-);
 
 CREATE TABLE categorie (
     id SERIAL PRIMARY KEY,
@@ -84,7 +87,8 @@ CREATE TABLE personne (
     nom_complet TEXT,
     email TEXT UNIQUE,
     telephone TEXT,
-    mot_de_passe TEXT
+    mot_de_passe TEXT,
+    role TEXT CHECK (role IN ('ADMIN', 'CLIENT'))
 );
 
 -- ------------------------------

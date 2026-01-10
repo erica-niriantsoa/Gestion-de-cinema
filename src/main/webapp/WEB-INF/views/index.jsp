@@ -5,20 +5,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CinéMax - Gestion de Cinéma</title>
+    <title>Business Management Suite</title>
     <style>
-        /* Variables CSS - Thème Cinéma */
+        /* Variables CSS - Palette Dark Fire & Sand */
         :root {
-            --cinema-dark: #0a0e27;
-            --cinema-blue: #1e3a8a;
-            --cinema-red: #dc2626;
-            --cinema-gold: #fbbf24;
-            --cinema-purple: #7c3aed;
-            --cinema-light: #f8fafc;
-            --cinema-gray: #475569;
-            --border-radius: 16px;
-            --box-shadow: 0 20px 60px rgba(10, 14, 39, 0.3);
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --dark-fire: #52130C;
+            --dark-fire-light: #6B2A23;
+            --sand: #FFECD1;
+            --sand-dark: #E8D4B9;
+            --accent: #C44536;
+            --accent-light: #D67A6F;
+            --chocolate: #3E000C;
+            --chocolate-light: #5A1A24;
+            --light: #FFF9F0;
+            --dark: #2C1810;
+            --gray: #8C7E6E;
+            --gray-light: #E8E0D5;
+            --border-radius: 12px;
+            --box-shadow: 0 8px 30px rgba(82, 19, 12, 0.08);
+            --transition: all 0.3s ease;
         }
 
         /* Reset et styles de base */
@@ -29,423 +34,285 @@
         }
 
         body {
-            font-family: 'Poppins', 'Segoe UI', sans-serif;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
             line-height: 1.6;
-            color: white;
-            background: var(--cinema-dark);
+            color: var(--dark);
+            background: linear-gradient(135deg, var(--sand) 0%, var(--light) 100%);
             min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        /* Background animé */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(124, 58, 237, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(220, 38, 38, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(30, 58, 138, 0.15) 0%, transparent 50%);
-            animation: gradient 15s ease infinite;
-            z-index: 0;
-        }
-
-        @keyframes gradient {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-        }
-
-        /* Étoiles décoratives */
-        .stars {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: white;
-            border-radius: 50%;
-            animation: twinkle 3s infinite;
-        }
-
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
         }
 
         /* Conteneur principal */
         .container {
             width: 100%;
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 40px 20px;
-            position: relative;
-            z-index: 2;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
         }
 
-        /* En-tête avec logo */
-        .header {
+        /* Carte principale */
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 80px 60px;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
             text-align: center;
-            margin-bottom: 60px;
+            border: 1px solid var(--sand-dark);
+            position: relative;
         }
 
-        .logo {
-            font-size: 4rem;
-            margin-bottom: 10px;
-            animation: float 3s ease-in-out infinite;
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--dark-fire), var(--chocolate));
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
+        /* En-tête */
         h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--cinema-gold), var(--cinema-red));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 15px;
-            text-shadow: 0 0 30px rgba(251, 191, 36, 0.3);
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--dark-fire);
+            margin-bottom: 60px;
+            line-height: 1.2;
         }
 
-        .subtitle {
-            font-size: 1.3rem;
-            color: var(--cinema-light);
-            opacity: 0.8;
-            font-weight: 300;
-        }
-
-        /* Section principale */
-        .main-content {
-            display: flex;
-            gap: 40px;
-            align-items: center;
+        /* Grille de boutons */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
             margin-top: 40px;
         }
 
-        /* Carte de présentation */
-        .welcome-card {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--border-radius);
-            padding: 50px;
-            box-shadow: var(--box-shadow);
-        }
-
-        .welcome-title {
-            font-size: 2rem;
-            margin-bottom: 20px;
-            color: var(--cinema-gold);
-        }
-
-        .welcome-text {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 30px;
-        }
-
-        /* Bouton principal */
-        .cta-btn {
-            display: inline-flex;
+        /* Boutons d'action */
+        .action-btn {
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 15px;
-            background: linear-gradient(135deg, var(--cinema-red), var(--cinema-purple));
-            color: white;
-            padding: 20px 50px;
-            border-radius: 50px;
+            justify-content: center;
+            background: white;
+            color: var(--dark);
+            padding: 40px 30px;
+            border-radius: var(--border-radius);
             text-decoration: none;
-            font-size: 1.2rem;
-            font-weight: 700;
             transition: var(--transition);
-            box-shadow: 0 10px 40px rgba(220, 38, 38, 0.4);
+            border: 2px solid var(--sand-dark);
+            cursor: pointer;
+            min-height: 200px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             position: relative;
             overflow: hidden;
         }
 
-        .cta-btn::before {
+        .action-btn::before {
             content: '';
             position: absolute;
             top: 0;
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.6s;
+            background: linear-gradient(90deg, transparent, rgba(82, 19, 12, 0.03), transparent);
+            transition: left 0.7s;
         }
 
-        .cta-btn:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 20px 60px rgba(220, 38, 38, 0.6);
+        .action-btn:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(82, 19, 12, 0.15);
+            border-color: transparent;
         }
 
-        .cta-btn:hover::before {
+        .action-btn:hover::before {
             left: 100%;
         }
 
-        .cta-icon {
-            font-size: 1.8rem;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        /* Carte de statistiques */
-        .stats-card {
-            flex: 1;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
-        .stat-item {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--border-radius);
-            padding: 30px;
-            text-align: center;
+        /* Icônes des boutons */
+        .btn-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--dark-fire), var(--chocolate));
             transition: var(--transition);
         }
 
-        .stat-item:hover {
-            transform: translateY(-10px);
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--cinema-gold);
+        .action-btn:hover .btn-icon {
+            transform: scale(1.1);
         }
 
-        .stat-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
+        .icon-svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--sand);
         }
 
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--cinema-gold), var(--cinema-red));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-        }
-
-        .stat-label {
-            font-size: 1rem;
-            color: rgba(255, 255, 255, 0.7);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Caractéristiques */
-        .features {
-            margin-top: 60px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-        }
-
-        .feature-item {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--border-radius);
-            padding: 30px;
-            transition: var(--transition);
-        }
-
-        .feature-item:hover {
-            transform: translateY(-10px);
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-
-        .feature-title {
-            font-size: 1.3rem;
+        /* Textes des boutons */
+        .btn-title {
+            font-size: 1.4rem;
             font-weight: 700;
-            margin-bottom: 10px;
-            color: var(--cinema-gold);
+            margin-bottom: 12px;
+            color: var(--dark-fire);
+            transition: var(--transition);
         }
 
-        .feature-desc {
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.6;
+        .btn-desc {
+            font-size: 1rem;
+            color: var(--gray);
+            line-height: 1.5;
+            max-width: 200px;
         }
+
+        /* Couleurs spécifiques pour chaque bouton */
+        .btn-job {
+            border-left: 4px solid var(--dark-fire);
+        }
+
+        .btn-job:hover .btn-title {
+            color: var(--dark-fire);
+        }
+
+        .btn-rh {
+            border-left: 4px solid var(--chocolate);
+        }
+
+        .btn-rh:hover .btn-title {
+            color: var(--chocolate);
+        }
+
+        .btn-manager {
+            border-left: 4px solid var(--accent);
+        }
+
+        .btn-manager:hover .btn-title {
+            color: var(--accent);
+        }
+
+        /* Indicateurs visuels */
+        .action-btn::after {
+            content: '→';
+            position: absolute;
+            bottom: 25px;
+            right: 30px;
+            font-size: 1.2rem;
+            color: var(--gray);
+            opacity: 0;
+            transition: var(--transition);
+            transform: translateX(-10px);
+        }
+
+        .action-btn:hover::after {
+            opacity: 1;
+            transform: translateX(0);
+            color: var(--dark-fire);
+        }
+
+        /* Animation d'entrée */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .action-btn {
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .action-btn:nth-child(1) { animation-delay: 0.1s; }
+        .action-btn:nth-child(2) { animation-delay: 0.2s; }
+        .action-btn:nth-child(3) { animation-delay: 0.3s; }
 
         /* Responsive */
-        @media (max-width: 1024px) {
-            .main-content {
-                flex-direction: column;
-            }
-
-            h1 {
-                font-size: 2.5rem;
-            }
-
-            .welcome-card {
-                padding: 40px;
-            }
-        }
-
         @media (max-width: 768px) {
+            .card {
+                padding: 60px 30px;
+            }
+            
             h1 {
-                font-size: 2rem;
+                font-size: 2.2rem;
+                margin-bottom: 40px;
             }
-
-            .subtitle {
-                font-size: 1rem;
-            }
-
-            .stats-card {
+            
+            .btn-grid {
                 grid-template-columns: 1fr;
+                gap: 20px;
             }
-
-            .welcome-card {
-                padding: 30px;
-            }
-
-            .cta-btn {
-                padding: 18px 40px;
-                font-size: 1.1rem;
+            
+            .action-btn {
+                min-height: 160px;
+                padding: 30px 25px;
             }
         }
 
         @media (max-width: 480px) {
-            .logo {
-                font-size: 3rem;
+            .card {
+                padding: 40px 20px;
             }
-
+            
             h1 {
                 font-size: 1.8rem;
             }
-
-            .features {
-                grid-template-columns: 1fr;
+            
+            .btn-title {
+                font-size: 1.2rem;
+            }
+            
+            .btn-icon {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .icon-svg {
+                width: 28px;
+                height: 28px;
             }
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Étoiles décoratives -->
-    <div class="stars">
-        <div class="star" style="top: 10%; left: 20%;"></div>
-        <div class="star" style="top: 20%; left: 80%; animation-delay: 1s;"></div>
-        <div class="star" style="top: 60%; left: 10%; animation-delay: 2s;"></div>
-        <div class="star" style="top: 80%; left: 70%; animation-delay: 0.5s;"></div>
-        <div class="star" style="top: 30%; left: 50%; animation-delay: 1.5s;"></div>
-    </div>
-
     <div class="container">
-        <!-- En-tête -->
-        <div class="header">
-            <div class="logo">🎬</div>
-            <h1>CinéMax</h1>
-            <p class="subtitle">Votre expérience cinéma commence ici</p>
-        </div>
-
-        <!-- Contenu principal -->
-        <div class="main-content">
-            <!-- Carte de bienvenue -->
-            <div class="welcome-card">
-                <h2 class="welcome-title">Bienvenue au CinéMax</h2>
-                <p class="welcome-text">
-                    Découvrez notre sélection de films exceptionnels. Des blockbusters aux films d'art et d'essai, 
-                    vivez une expérience cinématographique inoubliable dans nos salles ultramodernes.
-                </p>
-                <a href="${pageContext.request.contextPath}/films" class="cta-btn">
-                    <span class="cta-icon">🎥</span>
-                    <span>Découvrir nos films</span>
+        <div class="card">
+            <h1>Bienvenue sur la page d'accueil</h1>
+            
+            <div class="btn-grid">
+                <a href="${pageContext.request.contextPath}/client/accueil" class="action-btn btn-rh">
+                    <div class="btn-icon">
+                        <svg class="icon-svg" viewBox="0 0 24 24">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                    <span class="btn-title">Espace Client</span>
+                </a>
+                
+                <a href="${pageContext.request.contextPath}/acceuilAdmin" class="action-btn btn-manager">
+                    <div class="btn-icon">
+                        <svg class="icon-svg" viewBox="0 0 24 24">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                        </svg>
+                    </div>
+                    <span class="btn-title">Espace Admin</span>
                 </a>
             </div>
-
-            <!-- Statistiques -->
-            <div class="stats-card">
-                <div class="stat-item">
-                    <div class="stat-icon">🎞️</div>
-                    <div class="stat-value">120+</div>
-                    <div class="stat-label">Films</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-icon">🪑</div>
-                    <div class="stat-value">15</div>
-                    <div class="stat-label">Salles</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-icon">⭐</div>
-                    <div class="stat-value">4.8/5</div>
-                    <div class="stat-label">Satisfaction</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-icon">🎟️</div>
-                    <div class="stat-value">500K+</div>
-                    <div class="stat-label">Spectateurs</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Caractéristiques -->
-        <div class="features">
-            <div class="feature-item">
-                <div class="feature-icon">🎭</div>
-                <div class="feature-title">Tous les genres</div>
-                <p class="feature-desc">Action, comédie, drame, science-fiction et bien plus encore</p>
-            </div>
-            <div class="feature-item">
-                <div class="feature-icon">🍿</div>
-                <div class="feature-title">Confort optimal</div>
-                <p class="feature-desc">Sièges premium et expérience VIP disponibles</p>
-            </div>
-            <div class="feature-item">
-                <div class="feature-icon">📱</div>
-                <div class="feature-title">Réservation facile</div>
-                <p class="feature-desc">Réservez vos places en quelques clics</p>
-            </div>
-            <div class="feature-item">
-                <div class="feature-icon">🎬</div>
-                <div class="feature-title">Qualité IMAX</div>
-                <p class="feature-desc">Image et son de qualité cinématographique</p>
-            </div>
         </div>
     </div>
-
-    <script>
-        // Créer des étoiles supplémentaires dynamiquement
-        const starsContainer = document.querySelector('.stars');
-        for (let i = 0; i < 50; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            star.style.top = Math.random() * 100 + '%';
-            star.style.left = Math.random() * 100 + '%';
-            star.style.animationDelay = Math.random() * 3 + 's';
-            starsContainer.appendChild(star);
-        }
-    </script>
 </body>
 </html>

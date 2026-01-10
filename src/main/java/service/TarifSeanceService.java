@@ -1,9 +1,9 @@
 package service;
 
 import entity.TarifSeance;
-import repository.TarifSeanceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import repository.TarifSeanceRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,27 +14,23 @@ public class TarifSeanceService {
     @Autowired
     private TarifSeanceRepository tarifSeanceRepository;
 
-    public List<TarifSeance> getAllTarifSeances() {
+    public List<TarifSeance> findAll() {
         return tarifSeanceRepository.findAll();
     }
 
-    public Optional<TarifSeance> getTarifSeanceById(Long id) {
-        return tarifSeanceRepository.findById(id);
-    }
-
-    public List<TarifSeance> getTarifSeancesBySeanceId(Long seanceId) {
+    public List<TarifSeance> findBySeanceId(Integer seanceId) {
         return tarifSeanceRepository.findBySeanceId(seanceId);
     }
 
-    public Optional<TarifSeance> getTarifSeanceBySeanceAndTypePlaceAndCategoriePersonne(Long seanceId, Long typePlaceId, Long categoriePersonneId) {
-        return tarifSeanceRepository.findBySeanceIdAndTypePlaceIdAndCategoriePersonneId(seanceId, typePlaceId, categoriePersonneId);
+    public Optional<TarifSeance> findById(Integer id) {
+        return tarifSeanceRepository.findById(id);
     }
 
-    public TarifSeance saveTarifSeance(TarifSeance tarifSeance) {
-        return tarifSeanceRepository.save(tarifSeance);
+    public TarifSeance save(TarifSeance tarif) {
+        return tarifSeanceRepository.save(tarif);
     }
 
-    public void deleteTarifSeance(Long id) {
+    public void deleteById(Integer id) {
         tarifSeanceRepository.deleteById(id);
     }
 }

@@ -2,14 +2,15 @@ package entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Entity
+@Table(name = "reservation")
 public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "id_personne")
@@ -23,18 +24,18 @@ public class Reservation {
     @JoinColumn(name = "id_statut")
     private StatutReservation statut;
 
-    @Column(name = "montant_total")
+    @Column(name = "montant_total", precision = 6, scale = 2)
     private BigDecimal montantTotal;
 
     @Column(name = "date_reservation")
-    private LocalDateTime dateReservation;
+    private ZonedDateTime dateReservation;
 
-    // Getters and Setters
-    public Long getId() {
+    // Getters and setters
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -70,11 +71,11 @@ public class Reservation {
         this.montantTotal = montantTotal;
     }
 
-    public LocalDateTime getDateReservation() {
+    public ZonedDateTime getDateReservation() {
         return dateReservation;
     }
 
-    public void setDateReservation(LocalDateTime dateReservation) {
+    public void setDateReservation(ZonedDateTime dateReservation) {
         this.dateReservation = dateReservation;
     }
 }

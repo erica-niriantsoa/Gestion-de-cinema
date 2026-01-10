@@ -3,18 +3,21 @@ package entity;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "place")
 public class Place {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "id_salle")
     private Salle salle;
 
+    @Column(name = "rangee")
     private String rangee;
 
+    @Column(name = "numero")
     private Integer numero;
 
     @Column(name = "code_place")
@@ -24,12 +27,11 @@ public class Place {
     @JoinColumn(name = "id_type_place")
     private TypePlace typePlace;
 
-    // Getters and Setters
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

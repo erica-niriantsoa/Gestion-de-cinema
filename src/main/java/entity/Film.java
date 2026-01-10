@@ -2,10 +2,9 @@ package entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Set;
 
 @Entity
+@Table(name = "film")
 public class Film {
 
     @Id
@@ -23,19 +22,11 @@ public class Film {
     @Column(name = "date_sortie")
     private LocalDate dateSortie;
 
-    @Column(name = "age_min")
+    @Column(name = "age_min", columnDefinition = "int default 0")
     private Integer ageMin;
 
     @Column(name = "langue_originale")
     private String langueOriginale;
-
-    @ManyToMany
-    @JoinTable(
-        name = "film_categorie",
-        joinColumns = @JoinColumn(name = "id_film"),
-        inverseJoinColumns = @JoinColumn(name = "id_categorie")
-    )
-    private Set<Categorie> categories;
 
     // Getters and Setters
     public Long getId() {
@@ -92,13 +83,5 @@ public class Film {
 
     public void setLangueOriginale(String langueOriginale) {
         this.langueOriginale = langueOriginale;
-    }
-
-    public Set<Categorie> getCategories() {
-        return categories;
-    }
-
-    public void setCategories(Set<Categorie> categories) {
-        this.categories = categories;
     }
 }

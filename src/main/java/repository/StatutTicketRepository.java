@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface StatutTicketRepository extends JpaRepository<StatutTicket, Long> {
+public interface StatutTicketRepository extends JpaRepository<StatutTicket, Integer> {
     Optional<StatutTicket> findByCode(String code);
 }

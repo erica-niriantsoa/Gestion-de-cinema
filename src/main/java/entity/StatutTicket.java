@@ -8,20 +8,19 @@ public class StatutTicket {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
-    @Column(unique = true, nullable = false)
+    @Column(name = "code", unique = true)
     private String code;
 
-    @Column(nullable = false)
+    @Column(name = "libelle")
     private String libelle;
 
-    // Getters and Setters
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

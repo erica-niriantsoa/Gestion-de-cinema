@@ -1,9 +1,9 @@
 package service;
 
 import entity.CategoriePersonne;
-import repository.CategoriePersonneRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import repository.CategoriePersonneRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,19 +14,19 @@ public class CategoriePersonneService {
     @Autowired
     private CategoriePersonneRepository categoriePersonneRepository;
 
-    public List<CategoriePersonne> getAllCategoriePersonnes() {
+    public List<CategoriePersonne> findAll() {
         return categoriePersonneRepository.findAll();
     }
 
-    public Optional<CategoriePersonne> getCategoriePersonneById(Long id) {
+    public Optional<CategoriePersonne> findById(Integer id) {
         return categoriePersonneRepository.findById(id);
     }
 
-    public CategoriePersonne saveCategoriePersonne(CategoriePersonne categoriePersonne) {
-        return categoriePersonneRepository.save(categoriePersonne);
+    public CategoriePersonne save(CategoriePersonne c) {
+        return categoriePersonneRepository.save(c);
     }
 
-    public void deleteCategoriePersonne(Long id) {
+    public void deleteById(Integer id) {
         categoriePersonneRepository.deleteById(id);
     }
 }

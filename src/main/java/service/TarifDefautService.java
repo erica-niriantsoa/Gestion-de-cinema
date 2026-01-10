@@ -1,9 +1,9 @@
 package service;
 
 import entity.TarifDefaut;
-import repository.TarifDefautRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import repository.TarifDefautRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,23 +14,19 @@ public class TarifDefautService {
     @Autowired
     private TarifDefautRepository tarifDefautRepository;
 
-    public List<TarifDefaut> getAllTarifDefauts() {
+    public List<TarifDefaut> findAll() {
         return tarifDefautRepository.findAll();
     }
 
-    public Optional<TarifDefaut> getTarifDefautById(Long id) {
+    public Optional<TarifDefaut> findById(Integer id) {
         return tarifDefautRepository.findById(id);
     }
 
-    public Optional<TarifDefaut> getTarifDefautByTypePlaceAndCategoriePersonne(Long typePlaceId, Long categoriePersonneId) {
-        return tarifDefautRepository.findByTypePlaceIdAndCategoriePersonneId(typePlaceId, categoriePersonneId);
+    public TarifDefaut save(TarifDefaut tarif) {
+        return tarifDefautRepository.save(tarif);
     }
 
-    public TarifDefaut saveTarifDefaut(TarifDefaut tarifDefaut) {
-        return tarifDefautRepository.save(tarifDefaut);
-    }
-
-    public void deleteTarifDefaut(Long id) {
+    public void deleteById(Integer id) {
         tarifDefautRepository.deleteById(id);
     }
 }

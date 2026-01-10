@@ -3,24 +3,25 @@ package entity;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "salle")
 public class Salle {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
-    @Column(nullable = false)
+    @Column(name = "nom", nullable = false)
     private String nom;
 
-    @Column(nullable = false)
+    @Column(name = "capacite", nullable = false)
     private Integer capacite;
 
     // Getters and Setters
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

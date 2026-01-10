@@ -33,3 +33,35 @@ Thumbs.db
 
 # Backup / temp
 *~
+*.tmp
+*.swp
+*.bak
+
+# Environment and config
+.env
+.env.local
+.env.production
+application-local.properties
+application-dev.properties
+application-test.properties
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+log/
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# Node modules (si jamais)
+node_modules/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

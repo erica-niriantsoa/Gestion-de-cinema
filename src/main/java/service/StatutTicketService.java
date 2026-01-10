@@ -1,9 +1,9 @@
 package service;
 
 import entity.StatutTicket;
-import repository.StatutTicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import repository.StatutTicketRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,23 +14,23 @@ public class StatutTicketService {
     @Autowired
     private StatutTicketRepository statutTicketRepository;
 
-    public List<StatutTicket> getAllStatutTickets() {
+    public List<StatutTicket> findAll() {
         return statutTicketRepository.findAll();
     }
 
-    public Optional<StatutTicket> getStatutTicketById(Long id) {
+    public Optional<StatutTicket> findById(Integer id) {
         return statutTicketRepository.findById(id);
     }
 
-    public Optional<StatutTicket> getStatutTicketByCode(String code) {
+    public Optional<StatutTicket> findByCode(String code) {
         return statutTicketRepository.findByCode(code);
     }
 
-    public StatutTicket saveStatutTicket(StatutTicket statutTicket) {
-        return statutTicketRepository.save(statutTicket);
+    public StatutTicket save(StatutTicket s) {
+        return statutTicketRepository.save(s);
     }
 
-    public void deleteStatutTicket(Long id) {
+    public void deleteById(Integer id) {
         statutTicketRepository.deleteById(id);
     }
 }

@@ -1,14 +1,16 @@
 package entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Entity
+@Table(name = "seance")
 public class Seance {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "id_film")
@@ -18,19 +20,21 @@ public class Seance {
     @JoinColumn(name = "id_salle")
     private Salle salle;
 
-    @Column(nullable = false)
-    private LocalDateTime debut;
+    @Column(name = "debut", nullable = false)
+    private ZonedDateTime debut;
 
-    private LocalDateTime fin;
+    @Column(name = "fin")
+    private ZonedDateTime fin;
 
+    @Column(name = "langue")
     private String langue;
 
     // Getters and Setters
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -50,19 +54,19 @@ public class Seance {
         this.salle = salle;
     }
 
-    public LocalDateTime getDebut() {
+    public ZonedDateTime getDebut() {
         return debut;
     }
 
-    public void setDebut(LocalDateTime debut) {
+    public void setDebut(ZonedDateTime debut) {
         this.debut = debut;
     }
 
-    public LocalDateTime getFin() {
+    public ZonedDateTime getFin() {
         return fin;
     }
 
-    public void setFin(LocalDateTime fin) {
+    public void setFin(ZonedDateTime fin) {
         this.fin = fin;
     }
 
@@ -72,5 +76,21 @@ public class Seance {
 
     public void setLangue(String langue) {
         this.langue = langue;
+    }
+
+     @Transient
+    public String getDebutFormatted() {
+        if (debut != null) {
+            return debut.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        }
+        return null;
+    }
+    
+    @Transient
+    public String getFinFormatted() {
+        if (fin != null) {
+            return fin.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        }
+        return null;
     }
 }

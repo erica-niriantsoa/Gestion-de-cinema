@@ -1,9 +1,9 @@
 package service;
 
 import entity.Place;
-import repository.PlaceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import repository.PlaceRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,19 +14,19 @@ public class PlaceService {
     @Autowired
     private PlaceRepository placeRepository;
 
-    public List<Place> getAllPlaces() {
+    public List<Place> findAll() {
         return placeRepository.findAll();
     }
 
-    public Optional<Place> getPlaceById(Long id) {
+    public Optional<Place> findById(Integer id) {
         return placeRepository.findById(id);
     }
 
-    public Place savePlace(Place place) {
+    public Place save(Place place) {
         return placeRepository.save(place);
     }
 
-    public void deletePlace(Long id) {
+    public void deleteById(Integer id) {
         placeRepository.deleteById(id);
     }
 }

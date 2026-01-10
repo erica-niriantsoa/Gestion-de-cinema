@@ -1,25 +1,28 @@
 package entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "personne")
 public class Personne {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "nom_complet")
+    @Column(name = "nom_complet", nullable = false)
     private String nomComplet;
 
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
     private String telephone;
 
-    @Column(name = "mot_de_passe")
+    @Column(name = "mot_de_passe", nullable = false)
     private String motDePasse;
+
+    @Column(nullable = false)
+    private String role;
 
     // Getters and Setters
     public Long getId() {
@@ -60,5 +63,13 @@ public class Personne {
 
     public void setMotDePasse(String motDePasse) {
         this.motDePasse = motDePasse;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }
