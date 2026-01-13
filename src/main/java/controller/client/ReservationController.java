@@ -153,10 +153,56 @@ public class ReservationController {
     @GetMapping("/reservationDetail")
     public String listReservations(Model model) {
         List<ReservationComplete> reservations = reservationCompleteService.findAll();
+
+        // Charger les tickets avec leurs relations (seance.film, place, categoriePersonne, statut)
         List<Ticket> tickets = ticketRepository.findAll();
+        tickets.forEach(ticket -> {
+            if (ticket.getSeance() != null) {
+                ticket.getSeance().getFilm(); // Charger le film
+                ticket.getSeance().getSalle(); // Charger la salle
+
+                // Ajouter les dates converties pour l'affichage
+                model.addAttribute("seanceDebutDate", java.util.Date.from(ticket.getSeance().getDebut().toInstant()));
+                model.addAttribute("seanceFinDate", java.util.Date.from(ticket.getSeance().getFin().toInstant()));
+            }
+            ticket.getPlace(); // Charger la place
+            ticket.getCategoriePersonne(); // Charger la catégorie
+            ticket.getStatut(); // Charger le statut
+        });
+
         model.addAttribute("reservations", reservations);
         model.addAttribute("tickets", tickets);
         return "client/reservationDetail";
+    }
+
+    /**
+     * API JSON pour récupérer tous les tickets (facile pour UI JS)
+     */
+    @GetMapping("/tickets/json")
+    @ResponseBody
+    public List<Map<String, Object>> getTicketsJson() {
+        List<Ticket> tickets = ticketRepository.findAll();
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Ticket t : tickets) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", t.getId());
+            if (t.getSeance() != null) {
+                if (t.getSeance().getFilm() != null) m.put("film", t.getSeance().getFilm().getTitre());
+                m.put("seanceDebut", t.getSeance().getDebutFormatted());
+                m.put("seanceFin", t.getSeance().getFinFormatted());
+            }
+            if (t.getPlace() != null) m.put("place", t.getPlace().getCodePlace());
+            if (t.getCategoriePersonne() != null) m.put("categorie", t.getCategoriePersonne().getLibelle());
+            m.put("prix", t.getPrix());
+            if (t.getStatut() != null) m.put("statut", t.getStatut().getLibelle());
+            out.add(m);
+        }
+        return out;
+    }
+
+    @GetMapping("/tickets-ui")
+    public String ticketsUi() {
+        return "client/ticketsUI";
     }
 
 }

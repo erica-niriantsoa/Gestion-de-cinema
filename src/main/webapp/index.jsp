@@ -364,6 +364,12 @@
                     <div class="status-dot"></div>
                     <div class="status-text">Systeme en ligne - Prêt a projeter</div>
                 </div>
+                
+                <div style="margin-top: 20px; opacity: 0.6;">
+                    <a href="${pageContext.request.contextPath}/admin/accueil" style="color: var(--accent); text-decoration: none; font-size: 0.9rem;">
+                        🔐 Espace Administration
+                    </a>
+                </div>
             </div>
 
             <!-- Section visuelle -->

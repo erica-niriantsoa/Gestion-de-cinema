@@ -2,6 +2,7 @@ package entity;
 
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 @Entity
@@ -81,7 +82,8 @@ public class Seance {
      @Transient
     public String getDebutFormatted() {
         if (debut != null) {
-            return debut.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+            return debut.withZoneSameInstant(ZoneId.of("Europe/Paris"))
+                        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
         }
         return null;
     }
@@ -89,7 +91,8 @@ public class Seance {
     @Transient
     public String getFinFormatted() {
         if (fin != null) {
-            return fin.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+            return fin.withZoneSameInstant(ZoneId.of("Europe/Paris"))
+                      .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
         }
         return null;
     }

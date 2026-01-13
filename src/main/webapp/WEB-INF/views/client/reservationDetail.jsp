@@ -21,7 +21,6 @@
         .status { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .status.payé { background: #d4edda; color: #155724; }
         .status.en_attente { background: #fff3cd; color: #856404; }
-        .json { font-family: monospace; font-size: 12px; background: #f8f9fa; padding: 10px; border-radius: 4px; max-height: 200px; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -36,35 +35,29 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Date Réservation</th>
                     <th>Montant Total</th>
                     <th>Client</th>
                     <th>Email</th>
                     <th>Film</th>
-                    <th>Séance Début</th>
-                    <th>Séance Fin</th>
+                    <th>Séance</th>
                     <th>Salle</th>
                     <th>Statut</th>
                     <th>Nb Tickets</th>
-                    <th>Tickets (JSON)</th>
                 </tr>
             </thead>
             <tbody>
                 <c:forEach var="res" items="${reservations}">
                     <tr>
-                        <td>${res.reservationId}</td>
-                        <td><c:if test="${res.dateReservation != null}"><fmt:formatDate value="${java.util.Date.from(res.dateReservation.toInstant())}" pattern="dd/MM/yyyy HH:mm"/></c:if></td>
+                        <td><c:if test="${res.dateReservation != null}">${res.dateReservationFormatted}</c:if></td>
                         <td>${res.montantTotal} €</td>
                         <td>${res.clientNom}</td>
                         <td>${res.clientEmail}</td>
                         <td>${res.filmTitre}</td>
-                        <td><c:if test="${res.seanceDebut != null}"><fmt:formatDate value="${java.util.Date.from(res.seanceDebut.toInstant())}" pattern="dd/MM/yyyy HH:mm"/></c:if></td>
-                        <td><c:if test="${res.seanceFin != null}"><fmt:formatDate value="${java.util.Date.from(res.seanceFin.toInstant())}" pattern="dd/MM/yyyy HH:mm"/></c:if></td>
+                        <td><c:if test="${res.seanceDebut != null}">${res.seanceDebutFormatted}</c:if></td>
                         <td>${res.salleNom}</td>
                         <td><span class="status ${res.statutReservation == 'PAYE' ? 'payé' : 'en_attente'}">${res.statutReservation}</span></td>
                         <td>${res.nbTickets}</td>
-                        <td><div class="json">${res.tickets}</div></td>
                     </tr>
                 </c:forEach>
             </tbody>
@@ -77,9 +70,8 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Réservation ID</th>
-                    <th>Séance ID</th>
+                    <th>Film</th>
+                    <th>Séance</th>
                     <th>Place</th>
                     <th>Catégorie</th>
                     <th>Prix</th>
@@ -89,9 +81,8 @@
             <tbody>
                 <c:forEach var="ticket" items="${tickets}">
                     <tr>
-                        <td>${ticket.id}</td>
-                        <td>${ticket.reservation.id}</td>
-                        <td>${ticket.seance.id}</td>
+                        <td>${ticket.seance.film.titre}</td>
+                        <td>${ticket.seance.debutFormatted}</td>
                         <td>${ticket.place.codePlace}</td>
                         <td>${ticket.categoriePersonne.libelle}</td>
                         <td>${ticket.prix} €</td>

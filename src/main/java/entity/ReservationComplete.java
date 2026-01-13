@@ -141,4 +141,28 @@ public class ReservationComplete {
     public void setTickets(String tickets) {
         this.tickets = tickets;
     }
+
+    @Transient
+    public String getDateReservationFormatted() {
+        if (dateReservation != null) {
+            return dateReservation.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        }
+        return null;
+    }
+
+    @Transient
+    public String getSeanceDebutFormatted() {
+        if (seanceDebut != null) {
+            return seanceDebut.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        }
+        return null;
+    }
+
+    @Transient
+    public String getSeanceFinFormatted() {
+        if (seanceFin != null) {
+            return seanceFin.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        }
+        return null;
+    }
 }
