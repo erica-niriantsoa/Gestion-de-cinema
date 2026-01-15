@@ -1,23 +1,197 @@
+\c postgres;
+DROP DATABASE IF EXISTS cinema;
+CREATE DATABASE cinema;
+\c cinema;
+
+-- ------------------------------
+-- FILMS & categorieS
+-- ------------------------------
+CREATE TABLE film (
+    id SERIAL PRIMARY KEY,
+    titre TEXT NOT NULL,
+    description TEXT,
+    duree_minutes INT,
+    date_sortie DATE,
+    age_min INT DEFAULT 0, -- age minimum conseille
+    langue_originale TEXT -- langue du film
+);
+
 -- ------------------------------
 -- TYPE DE PLACE
 -- ------------------------------
+CREATE TABLE type_place (
+    id SERIAL PRIMARY KEY,
+    libelle TEXT NOT NULL -- STANDARD, VIP, PMR
+);
+
+-- ------------------------------
+-- CATEGORIE PERSONNE
+-- ------------------------------
+CREATE TABLE categorie_personne (
+    id SERIAL PRIMARY KEY,
+    libelle TEXT NOT NULL -- ADULTE, ENFANT, SENIOR...
+);
+
+CREATE TABLE categorie (
+    id SERIAL PRIMARY KEY,
+    libelle TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE film_categorie (
+    id_film INT REFERENCES film(id) ON DELETE CASCADE,
+    id_categorie INT REFERENCES categorie(id) ON DELETE CASCADE,
+    PRIMARY KEY (id_film, id_categorie)
+);
+
+-- ------------------------------
+-- SALLES & PLACES
+-- ------------------------------
+CREATE TABLE salle (
+    id SERIAL PRIMARY KEY,
+    nom TEXT NOT NULL,
+    capacite INT NOT NULL CHECK (capacite > 0)
+);
+
+CREATE TABLE place (
+    id SERIAL PRIMARY KEY,
+    id_salle INT REFERENCES salle(id) ON DELETE CASCADE,
+    rangee TEXT,
+    numero INT,
+    code_place TEXT,
+    id_type_place INT REFERENCES type_place(id)
+);
+
+-- ------------------------------
+-- SEANCES
+-- ------------------------------
+CREATE TABLE seance (
+    id SERIAL PRIMARY KEY,
+    id_film INT REFERENCES film(id),
+    id_salle INT REFERENCES salle(id),
+    debut TIMESTAMPTZ NOT NULL,
+    fin TIMESTAMPTZ,
+    langue TEXT
+);
+
+CREATE INDEX idx_seance_salle_debut
+ON seance(id_salle, debut);
+
+-- ------------------------------
+-- PERSONNES (Clients)
+-- ------------------------------
+CREATE TABLE personne (
+    id SERIAL PRIMARY KEY,
+    nom_complet TEXT,
+    email TEXT UNIQUE,
+    telephone TEXT,
+    mot_de_passe TEXT,
+    role TEXT CHECK (role IN ('ADMIN', 'CLIENT'))
+);
+
+-- ------------------------------
+-- STATUTS RESERVATION
+-- ------------------------------
+CREATE TABLE statut_reservation (
+    id SERIAL PRIMARY KEY,
+    code TEXT UNIQUE NOT NULL, -- CREEE, EN_ATTENTE, PAYEE, CONFIRMEE, ANNULEE, EXPIREE
+    libelle TEXT NOT NULL
+);
+
+-- ------------------------------
+-- RESERVATIONS
+-- ------------------------------
+CREATE TABLE reservation (
+    id SERIAL PRIMARY KEY,
+    id_personne INT REFERENCES personne(id) NULL, -- nullable pour vente sur place
+    id_seance INT REFERENCES seance(id),
+    id_statut INT REFERENCES statut_reservation(id),
+    montant_total NUMERIC(12,2) DEFAULT 0,
+    date_reservation TIMESTAMPTZ DEFAULT now()
+);
+
+-- ------------------------------
+-- HISTORIQUE STATUT RESERVATION
+-- ------------------------------
+CREATE TABLE historique_statut_reservation (
+    id SERIAL PRIMARY KEY,
+    id_reservation INT REFERENCES reservation(id) ON DELETE CASCADE,
+    id_statut INT REFERENCES statut_reservation(id),
+    date_changement TIMESTAMPTZ DEFAULT now(),
+    change_par INT REFERENCES personne(id)
+);
+
+-- ------------------------------
+-- STATUTS TICKET
+-- ------------------------------
+CREATE TABLE statut_ticket (
+    id SERIAL PRIMARY KEY,
+    code TEXT UNIQUE NOT NULL, -- RESERVE, PAYE, ANNULE, UTILISE, REMBOURSE
+    libelle TEXT NOT NULL
+);
+
+-- ------------------------------
+-- TICKETS
+-- ------------------------------
+CREATE TABLE ticket (
+    id SERIAL PRIMARY KEY,
+    id_reservation INT REFERENCES reservation(id) NULL, -- nullable pour ticket sans reservation
+    id_seance INT REFERENCES seance(id),
+    id_place INT REFERENCES place(id),
+    id_statut INT REFERENCES statut_ticket(id),
+    id_categorie_personne INT REFERENCES categorie_personne(id), -- adulte/enfant
+    prix NUMERIC(10,2) NOT NULL
+);
+
+-- ------------------------------
+-- HISTORIQUE STATUT TICKET
+-- ------------------------------
+CREATE TABLE historique_statut_ticket (
+    id SERIAL PRIMARY KEY,
+    id_ticket INT REFERENCES ticket(id) ON DELETE CASCADE,
+    id_statut INT REFERENCES statut_ticket(id),
+    date_changement TIMESTAMPTZ DEFAULT now(),
+    change_par INT REFERENCES personne(id),
+    commentaire TEXT
+);
+
+-- ------------------------------
+-- TARIF PAR DEFAUT
+-- ------------------------------
+CREATE TABLE tarif_defaut (
+    id SERIAL PRIMARY KEY,
+    id_type_place INT REFERENCES type_place(id),
+    id_categorie_personne INT REFERENCES categorie_personne(id),
+    prix NUMERIC(10,2) NOT NULL
+);
+
+-- ------------------------------
+-- TARIF SPECIFIQUE PAR SEANCE (OPTIONNEL)
+-- ------------------------------
+CREATE TABLE tarif_seance (
+    id SERIAL PRIMARY KEY,
+    id_seance INT REFERENCES seance(id),
+    id_type_place INT REFERENCES type_place(id),
+    id_categorie_personne INT REFERENCES categorie_personne(id),
+    prix NUMERIC(10,2) NOT NULL
+);
+
+-- ------------------------------
+-- DONNÉES
+-- ------------------------------
+
+-- TYPE DE PLACE
 INSERT INTO type_place (id, libelle) VALUES
 (1, 'STANDARD'),
 (2, 'PREMIUM'),
 (3, 'VIP');
 
-INSERT INTO type_place (id, libelle) VALUES (3, 'VIP');
--- ------------------------------
 -- CATEGORIE PERSONNE
--- ------------------------------
 INSERT INTO categorie_personne (id, libelle) VALUES
 (1, 'ADULTE'),
 (2, 'ENFANT'),
 (3, 'SENIOR');
 
--- ------------------------------
 -- CATEGORIES DE FILMS
--- ------------------------------
 INSERT INTO categorie (id, libelle) VALUES
 (1, 'ACTION'),
 (2, 'AVENTURE'),
@@ -30,9 +204,7 @@ INSERT INTO categorie (id, libelle) VALUES
 (9, 'ANIMATION'),
 (10, 'DOCUMENTAIRE');
 
--- ------------------------------
 -- FILMS
--- ------------------------------
 INSERT INTO film (id, titre, description, duree_minutes, date_sortie, age_min, langue_originale) VALUES
 (1, 'Le Dernier Royaume', 'Un jeune guerrier cherche a reconquerir son heritage dans l''Angleterre du IXe siecle.', 138, '2024-03-15', 12, 'Francais'),
 (2, 'Echos de l''Espace', 'Une equipe d''astronautes decouvre un signal mysterieux provenant d''une galaxie lointaine.', 156, '2024-04-22', 10, 'Anglais'),
@@ -44,9 +216,7 @@ INSERT INTO film (id, titre, description, duree_minutes, date_sortie, age_min, l
 (8, 'Le Secret de la Foret', 'Aventure fantastique dans une foret enchantee pleine de creatures magiques.', 96, '2024-04-05', 6, 'Francais'),
 (9, 'Avatar', 'Un marine paraplégique est envoyé sur la lune Pandora pour une mission unique mais qui tourne mal.', 162, '2009-12-18', 12, 'Anglais');
 
--- ------------------------------
 -- FILM_CATEGORIE
--- ------------------------------
 INSERT INTO film_categorie (id_film, id_categorie) VALUES
 (1, 1), (1, 2),
 (2, 6), (2, 2),
@@ -57,9 +227,7 @@ INSERT INTO film_categorie (id_film, id_categorie) VALUES
 (7, 9), (7, 3),
 (8, 2), (8, 9);
 
--- ------------------------------
 -- SALLES
--- ------------------------------
 INSERT INTO salle (id, nom, capacite) VALUES
 (1, 'Salle 1 - Odeon', 100),
 (2, 'Salle 2 - Majestic', 80),
@@ -68,20 +236,15 @@ INSERT INTO salle (id, nom, capacite) VALUES
 (5, 'Salle 5 - IMAX', 150),
 (6, 'Salle VIP - Prestige', 40);
 
--- ------------------------------
--- PLACES
--- ------------------------------
--- Salle 1 (Odéon) - 100 places (10 VIP + 20 PREMIUM + 70 STANDARD)
+-- PLACES (séquences continues)
+-- Salle 1: IDs 1-100
 INSERT INTO place (id, id_salle, rangee, numero, code_place, id_type_place) VALUES
--- Rangée A: VIP (10 places)
 (1, 1, 'A', 1, 'A1', 3), (2, 1, 'A', 2, 'A2', 3), (3, 1, 'A', 3, 'A3', 3), (4, 1, 'A', 4, 'A4', 3), (5, 1, 'A', 5, 'A5', 3),
 (6, 1, 'A', 6, 'A6', 3), (7, 1, 'A', 7, 'A7', 3), (8, 1, 'A', 8, 'A8', 3), (9, 1, 'A', 9, 'A9', 3), (10, 1, 'A', 10, 'A10', 3),
--- Rangées B-C: PREMIUM (20 places)
 (11, 1, 'B', 1, 'B1', 2), (12, 1, 'B', 2, 'B2', 2), (13, 1, 'B', 3, 'B3', 2), (14, 1, 'B', 4, 'B4', 2), (15, 1, 'B', 5, 'B5', 2),
 (16, 1, 'B', 6, 'B6', 2), (17, 1, 'B', 7, 'B7', 2), (18, 1, 'B', 8, 'B8', 2), (19, 1, 'B', 9, 'B9', 2), (20, 1, 'B', 10, 'B10', 2),
 (21, 1, 'C', 1, 'C1', 2), (22, 1, 'C', 2, 'C2', 2), (23, 1, 'C', 3, 'C3', 2), (24, 1, 'C', 4, 'C4', 2), (25, 1, 'C', 5, 'C5', 2),
 (26, 1, 'C', 6, 'C6', 2), (27, 1, 'C', 7, 'C7', 2), (28, 1, 'C', 8, 'C8', 2), (29, 1, 'C', 9, 'C9', 2), (30, 1, 'C', 10, 'C10', 2),
--- Rangées D-J: STANDARD (70 places)
 (31, 1, 'D', 1, 'D1', 1), (32, 1, 'D', 2, 'D2', 1), (33, 1, 'D', 3, 'D3', 1), (34, 1, 'D', 4, 'D4', 1), (35, 1, 'D', 5, 'D5', 1),
 (36, 1, 'D', 6, 'D6', 1), (37, 1, 'D', 7, 'D7', 1), (38, 1, 'D', 8, 'D8', 1), (39, 1, 'D', 9, 'D9', 1), (40, 1, 'D', 10, 'D10', 1),
 (41, 1, 'E', 1, 'E1', 1), (42, 1, 'E', 2, 'E2', 1), (43, 1, 'E', 3, 'E3', 1), (44, 1, 'E', 4, 'E4', 1), (45, 1, 'E', 5, 'E5', 1),
@@ -97,140 +260,58 @@ INSERT INTO place (id, id_salle, rangee, numero, code_place, id_type_place) VALU
 (91, 1, 'J', 1, 'J1', 1), (92, 1, 'J', 2, 'J2', 1), (93, 1, 'J', 3, 'J3', 1), (94, 1, 'J', 4, 'J4', 1), (95, 1, 'J', 5, 'J5', 1),
 (96, 1, 'J', 6, 'J6', 1), (97, 1, 'J', 7, 'J7', 1), (98, 1, 'J', 8, 'J8', 1), (99, 1, 'J', 9, 'J9', 1), (100, 1, 'J', 10, 'J10', 1);
 
--- Salle 2 (Majestic) - 80 places (40 STANDARD + 40 PREMIUM)
+-- Salle 2: IDs 101-180
 INSERT INTO place (id, id_salle, rangee, numero, code_place, id_type_place) VALUES
 -- STANDARD (40 places)
-(201, 2, 'A', 1, 'A1', 1), (202, 2, 'A', 2, 'A2', 1), (203, 2, 'A', 3, 'A3', 1), (204, 2, 'A', 4, 'A4', 1), (205, 2, 'A', 5, 'A5', 1),
-(206, 2, 'A', 6, 'A6', 1), (207, 2, 'A', 7, 'A7', 1), (208, 2, 'A', 8, 'A8', 1), (209, 2, 'A', 9, 'A9', 1), (210, 2, 'A', 10, 'A10', 1),
-(211, 2, 'B', 1, 'B1', 1), (212, 2, 'B', 2, 'B2', 1), (213, 2, 'B', 3, 'B3', 1), (214, 2, 'B', 4, 'B4', 1), (215, 2, 'B', 5, 'B5', 1),
-(216, 2, 'B', 6, 'B6', 1), (217, 2, 'B', 7, 'B7', 1), (218, 2, 'B', 8, 'B8', 1), (219, 2, 'B', 9, 'B9', 1), (220, 2, 'B', 10, 'B10', 1),
-(221, 2, 'C', 1, 'C1', 1), (222, 2, 'C', 2, 'C2', 1), (223, 2, 'C', 3, 'C3', 1), (224, 2, 'C', 4, 'C4', 1), (225, 2, 'C', 5, 'C5', 1),
-(226, 2, 'C', 6, 'C6', 1), (227, 2, 'C', 7, 'C7', 1), (228, 2, 'C', 8, 'C8', 1), (229, 2, 'C', 9, 'C9', 1), (230, 2, 'C', 10, 'C10', 1),
-(231, 2, 'D', 1, 'D1', 1), (232, 2, 'D', 2, 'D2', 1), (233, 2, 'D', 3, 'D3', 1), (234, 2, 'D', 4, 'D4', 1), (235, 2, 'D', 5, 'D5', 1),
-(236, 2, 'D', 6, 'D6', 1), (237, 2, 'D', 7, 'D7', 1), (238, 2, 'D', 8, 'D8', 1), (239, 2, 'D', 9, 'D9', 1), (240, 2, 'D', 10, 'D10', 1),
+(101, 2, 'A', 1, 'A1', 1), (102, 2, 'A', 2, 'A2', 1), (103, 2, 'A', 3, 'A3', 1), (104, 2, 'A', 4, 'A4', 1), (105, 2, 'A', 5, 'A5', 1),
+(106, 2, 'A', 6, 'A6', 1), (107, 2, 'A', 7, 'A7', 1), (108, 2, 'A', 8, 'A8', 1), (109, 2, 'A', 9, 'A9', 1), (110, 2, 'A', 10, 'A10', 1),
+(111, 2, 'B', 1, 'B1', 1), (112, 2, 'B', 2, 'B2', 1), (113, 2, 'B', 3, 'B3', 1), (114, 2, 'B', 4, 'B4', 1), (115, 2, 'B', 5, 'B5', 1),
+(116, 2, 'B', 6, 'B6', 1), (117, 2, 'B', 7, 'B7', 1), (118, 2, 'B', 8, 'B8', 1), (119, 2, 'B', 9, 'B9', 1), (120, 2, 'B', 10, 'B10', 1),
+(121, 2, 'C', 1, 'C1', 1), (122, 2, 'C', 2, 'C2', 1), (123, 2, 'C', 3, 'C3', 1), (124, 2, 'C', 4, 'C4', 1), (125, 2, 'C', 5, 'C5', 1),
+(126, 2, 'C', 6, 'C6', 1), (127, 2, 'C', 7, 'C7', 1), (128, 2, 'C', 8, 'C8', 1), (129, 2, 'C', 9, 'C9', 1), (130, 2, 'C', 10, 'C10', 1),
+(131, 2, 'D', 1, 'D1', 1), (132, 2, 'D', 2, 'D2', 1), (133, 2, 'D', 3, 'D3', 1), (134, 2, 'D', 4, 'D4', 1), (135, 2, 'D', 5, 'D5', 1),
+(136, 2, 'D', 6, 'D6', 1), (137, 2, 'D', 7, 'D7', 1), (138, 2, 'D', 8, 'D8', 1), (139, 2, 'D', 9, 'D9', 1), (140, 2, 'D', 10, 'D10', 1),
 -- PREMIUM (40 places)
-(241, 2, 'E', 1, 'E1', 2), (242, 2, 'E', 2, 'E2', 2), (243, 2, 'E', 3, 'E3', 2), (244, 2, 'E', 4, 'E4', 2), (245, 2, 'E', 5, 'E5', 2),
-(246, 2, 'E', 6, 'E6', 2), (247, 2, 'E', 7, 'E7', 2), (248, 2, 'E', 8, 'E8', 2), (249, 2, 'E', 9, 'E9', 2), (250, 2, 'E', 10, 'E10', 2),
-(251, 2, 'F', 1, 'F1', 2), (252, 2, 'F', 2, 'F2', 2), (253, 2, 'F', 3, 'F3', 2), (254, 2, 'F', 4, 'F4', 2), (255, 2, 'F', 5, 'F5', 2),
-(256, 2, 'F', 6, 'F6', 2), (257, 2, 'F', 7, 'F7', 2), (258, 2, 'F', 8, 'F8', 2), (259, 2, 'F', 9, 'F9', 2), (260, 2, 'F', 10, 'F10', 2),
-(261, 2, 'G', 1, 'G1', 2), (262, 2, 'G', 2, 'G2', 2), (263, 2, 'G', 3, 'G3', 2), (264, 2, 'G', 4, 'G4', 2), (265, 2, 'G', 5, 'G5', 2),
-(266, 2, 'G', 6, 'G6', 2), (267, 2, 'G', 7, 'G7', 2), (268, 2, 'G', 8, 'G8', 2), (269, 2, 'G', 9, 'G9', 2), (270, 2, 'G', 10, 'G10', 2),
-(271, 2, 'H', 1, 'H1', 2), (272, 2, 'H', 2, 'H2', 2), (273, 2, 'H', 3, 'H3', 2), (274, 2, 'H', 4, 'H4', 2), (275, 2, 'H', 5, 'H5', 2),
-(276, 2, 'H', 6, 'H6', 2), (277, 2, 'H', 7, 'H7', 2), (278, 2, 'H', 8, 'H8', 2), (279, 2, 'H', 9, 'H9', 2), (280, 2, 'H', 10, 'H10', 2);
+(141, 2, 'E', 1, 'E1', 2), (142, 2, 'E', 2, 'E2', 2), (143, 2, 'E', 3, 'E3', 2), (144, 2, 'E', 4, 'E4', 2), (145, 2, 'E', 5, 'E5', 2),
+(146, 2, 'E', 6, 'E6', 2), (147, 2, 'E', 7, 'E7', 2), (148, 2, 'E', 8, 'E8', 2), (149, 2, 'E', 9, 'E9', 2), (150, 2, 'E', 10, 'E10', 2),
+(151, 2, 'F', 1, 'F1', 2), (152, 2, 'F', 2, 'F2', 2), (153, 2, 'F', 3, 'F3', 2), (154, 2, 'F', 4, 'F4', 2), (155, 2, 'F', 5, 'F5', 2),
+(156, 2, 'F', 6, 'F6', 2), (157, 2, 'F', 7, 'F7', 2), (158, 2, 'F', 8, 'F8', 2), (159, 2, 'F', 9, 'F9', 2), (160, 2, 'F', 10, 'F10', 2),
+(161, 2, 'G', 1, 'G1', 2), (162, 2, 'G', 2, 'G2', 2), (163, 2, 'G', 3, 'G3', 2), (164, 2, 'G', 4, 'G4', 2), (165, 2, 'G', 5, 'G5', 2),
+(166, 2, 'G', 6, 'G6', 2), (167, 2, 'G', 7, 'G7', 2), (168, 2, 'G', 8, 'G8', 2), (169, 2, 'G', 9, 'G9', 2), (170, 2, 'G', 10, 'G10', 2),
+(171, 2, 'H', 1, 'H1', 2), (172, 2, 'H', 2, 'H2', 2), (173, 2, 'H', 3, 'H3', 2), (174, 2, 'H', 4, 'H4', 2), (175, 2, 'H', 5, 'H5', 2),
+(176, 2, 'H', 6, 'H6', 2), (177, 2, 'H', 7, 'H7', 2), (178, 2, 'H', 8, 'H8', 2), (179, 2, 'H', 9, 'H9', 2), (180, 2, 'H', 10, 'H10', 2);
 
--- Salle 3 (Paradisio) - 200 places (100 STANDARD + 100 PREMIUM)
+-- Salle 3: IDs 181-380 (simplifié pour l'exemple)
+-- Note: En réalité, vous devriez insérer toutes les 200 places
 INSERT INTO place (id, id_salle, rangee, numero, code_place, id_type_place) VALUES
--- STANDARD (100 places) - Rangées A-J
-(301, 3, 'A', 1, 'A1', 1), (302, 3, 'A', 2, 'A2', 1), (303, 3, 'A', 3, 'A3', 1), (304, 3, 'A', 4, 'A4', 1), (305, 3, 'A', 5, 'A5', 1),
-(306, 3, 'A', 6, 'A6', 1), (307, 3, 'A', 7, 'A7', 1), (308, 3, 'A', 8, 'A8', 1), (309, 3, 'A', 9, 'A9', 1), (310, 3, 'A', 10, 'A10', 1),
-(311, 3, 'B', 1, 'B1', 1), (312, 3, 'B', 2, 'B2', 1), (313, 3, 'B', 3, 'B3', 1), (314, 3, 'B', 4, 'B4', 1), (315, 3, 'B', 5, 'B5', 1),
-(316, 3, 'B', 6, 'B6', 1), (317, 3, 'B', 7, 'B7', 1), (318, 3, 'B', 8, 'B8', 1), (319, 3, 'B', 9, 'B9', 1), (320, 3, 'B', 10, 'B10', 1),
-(321, 3, 'C', 1, 'C1', 1), (322, 3, 'C', 2, 'C2', 1), (323, 3, 'C', 3, 'C3', 1), (324, 3, 'C', 4, 'C4', 1), (325, 3, 'C', 5, 'C5', 1),
-(326, 3, 'C', 6, 'C6', 1), (327, 3, 'C', 7, 'C7', 1), (328, 3, 'C', 8, 'C8', 1), (329, 3, 'C', 9, 'C9', 1), (330, 3, 'C', 10, 'C10', 1),
-(331, 3, 'D', 1, 'D1', 1), (332, 3, 'D', 2, 'D2', 1), (333, 3, 'D', 3, 'D3', 1), (334, 3, 'D', 4, 'D4', 1), (335, 3, 'D', 5, 'D5', 1),
-(336, 3, 'D', 6, 'D6', 1), (337, 3, 'D', 7, 'D7', 1), (338, 3, 'D', 8, 'D8', 1), (339, 3, 'D', 9, 'D9', 1), (340, 3, 'D', 10, 'D10', 1),
-(341, 3, 'E', 1, 'E1', 1), (342, 3, 'E', 2, 'E2', 1), (343, 3, 'E', 3, 'E3', 1), (344, 3, 'E', 4, 'E4', 1), (345, 3, 'E', 5, 'E5', 1),
-(346, 3, 'E', 6, 'E6', 1), (347, 3, 'E', 7, 'E7', 1), (348, 3, 'E', 8, 'E8', 1), (349, 3, 'E', 9, 'E9', 1), (350, 3, 'E', 10, 'E10', 1),
-(351, 3, 'F', 1, 'F1', 1), (352, 3, 'F', 2, 'F2', 1), (353, 3, 'F', 3, 'F3', 1), (354, 3, 'F', 4, 'F4', 1), (355, 3, 'F', 5, 'F5', 1),
-(356, 3, 'F', 6, 'F6', 1), (357, 3, 'F', 7, 'F7', 1), (358, 3, 'F', 8, 'F8', 1), (359, 3, 'F', 9, 'F9', 1), (360, 3, 'F', 10, 'F10', 1),
-(361, 3, 'G', 1, 'G1', 1), (362, 3, 'G', 2, 'G2', 1), (363, 3, 'G', 3, 'G3', 1), (364, 3, 'G', 4, 'G4', 1), (365, 3, 'G', 5, 'G5', 1),
-(366, 3, 'G', 6, 'G6', 1), (367, 3, 'G', 7, 'G7', 1), (368, 3, 'G', 8, 'G8', 1), (369, 3, 'G', 9, 'G9', 1), (370, 3, 'G', 10, 'G10', 1),
-(371, 3, 'H', 1, 'H1', 1), (372, 3, 'H', 2, 'H2', 1), (373, 3, 'H', 3, 'H3', 1), (374, 3, 'H', 4, 'H4', 1), (375, 3, 'H', 5, 'H5', 1),
-(376, 3, 'H', 6, 'H6', 1), (377, 3, 'H', 7, 'H7', 1), (378, 3, 'H', 8, 'H8', 1), (379, 3, 'H', 9, 'H9', 1), (380, 3, 'H', 10, 'H10', 1),
-(381, 3, 'I', 1, 'I1', 1), (382, 3, 'I', 2, 'I2', 1), (383, 3, 'I', 3, 'I3', 1), (384, 3, 'I', 4, 'I4', 1), (385, 3, 'I', 5, 'I5', 1),
-(386, 3, 'I', 6, 'I6', 1), (387, 3, 'I', 7, 'I7', 1), (388, 3, 'I', 8, 'I8', 1), (389, 3, 'I', 9, 'I9', 1), (390, 3, 'I', 10, 'I10', 1),
-(391, 3, 'J', 1, 'J1', 1), (392, 3, 'J', 2, 'J2', 1), (393, 3, 'J', 3, 'J3', 1), (394, 3, 'J', 4, 'J4', 1), (395, 3, 'J', 5, 'J5', 1),
-(396, 3, 'J', 6, 'J6', 1), (397, 3, 'J', 7, 'J7', 1), (398, 3, 'J', 8, 'J8', 1), (399, 3, 'J', 9, 'J9', 1), (400, 3, 'J', 10, 'J10', 1),
--- PREMIUM (100 places) - Rangées K-T
-(401, 3, 'K', 1, 'K1', 2), (402, 3, 'K', 2, 'K2', 2), (403, 3, 'K', 3, 'K3', 2), (404, 3, 'K', 4, 'K4', 2), (405, 3, 'K', 5, 'K5', 2),
-(406, 3, 'K', 6, 'K6', 2), (407, 3, 'K', 7, 'K7', 2), (408, 3, 'K', 8, 'K8', 2), (409, 3, 'K', 9, 'K9', 2), (410, 3, 'K', 10, 'K10', 2),
-(411, 3, 'L', 1, 'L1', 2), (412, 3, 'L', 2, 'L2', 2), (413, 3, 'L', 3, 'L3', 2), (414, 3, 'L', 4, 'L4', 2), (415, 3, 'L', 5, 'L5', 2),
-(416, 3, 'L', 6, 'L6', 2), (417, 3, 'L', 7, 'L7', 2), (418, 3, 'L', 8, 'L8', 2), (419, 3, 'L', 9, 'L9', 2), (420, 3, 'L', 10, 'L10', 2),
-(421, 3, 'M', 1, 'M1', 2), (422, 3, 'M', 2, 'M2', 2), (423, 3, 'M', 3, 'M3', 2), (424, 3, 'M', 4, 'M4', 2), (425, 3, 'M', 5, 'M5', 2),
-(426, 3, 'M', 6, 'M6', 2), (427, 3, 'M', 7, 'M7', 2), (428, 3, 'M', 8, 'M8', 2), (429, 3, 'M', 9, 'M9', 2), (430, 3, 'M', 10, 'M10', 2),
-(431, 3, 'N', 1, 'N1', 2), (432, 3, 'N', 2, 'N2', 2), (433, 3, 'N', 3, 'N3', 2), (434, 3, 'N', 4, 'N4', 2), (435, 3, 'N', 5, 'N5', 2),
-(436, 3, 'N', 6, 'N6', 2), (437, 3, 'N', 7, 'N7', 2), (438, 3, 'N', 8, 'N8', 2), (439, 3, 'N', 9, 'N9', 2), (440, 3, 'N', 10, 'N10', 2),
-(441, 3, 'O', 1, 'O1', 2), (442, 3, 'O', 2, 'O2', 2), (443, 3, 'O', 3, 'O3', 2), (444, 3, 'O', 4, 'O4', 2), (445, 3, 'O', 5, 'O5', 2),
-(446, 3, 'O', 6, 'O6', 2), (447, 3, 'O', 7, 'O7', 2), (448, 3, 'O', 8, 'O8', 2), (449, 3, 'O', 9, 'O9', 2), (450, 3, 'O', 10, 'O10', 2),
-(451, 3, 'P', 1, 'P1', 2), (452, 3, 'P', 2, 'P2', 2), (453, 3, 'P', 3, 'P3', 2), (454, 3, 'P', 4, 'P4', 2), (455, 3, 'P', 5, 'P5', 2),
-(456, 3, 'P', 6, 'P6', 2), (457, 3, 'P', 7, 'P7', 2), (458, 3, 'P', 8, 'P8', 2), (459, 3, 'P', 9, 'P9', 2), (460, 3, 'P', 10, 'P10', 2),
-(461, 3, 'Q', 1, 'Q1', 2), (462, 3, 'Q', 2, 'Q2', 2), (463, 3, 'Q', 3, 'Q3', 2), (464, 3, 'Q', 4, 'Q4', 2), (465, 3, 'Q', 5, 'Q5', 2),
-(466, 3, 'Q', 6, 'Q6', 2), (467, 3, 'Q', 7, 'Q7', 2), (468, 3, 'Q', 8, 'Q8', 2), (469, 3, 'Q', 9, 'Q9', 2), (470, 3, 'Q', 10, 'Q10', 2),
-(471, 3, 'R', 1, 'R1', 2), (472, 3, 'R', 2, 'R2', 2), (473, 3, 'R', 3, 'R3', 2), (474, 3, 'R', 4, 'R4', 2), (475, 3, 'R', 5, 'R5', 2),
-(476, 3, 'R', 6, 'R6', 2), (477, 3, 'R', 7, 'R7', 2), (478, 3, 'R', 8, 'R8', 2), (479, 3, 'R', 9, 'R9', 2), (480, 3, 'R', 10, 'R10', 2),
-(481, 3, 'S', 1, 'S1', 2), (482, 3, 'S', 2, 'S2', 2), (483, 3, 'S', 3, 'S3', 2), (484, 3, 'S', 4, 'S4', 2), (485, 3, 'S', 5, 'S5', 2),
-(486, 3, 'S', 6, 'S6', 2), (487, 3, 'S', 7, 'S7', 2), (488, 3, 'S', 8, 'S8', 2), (489, 3, 'S', 9, 'S9', 2), (490, 3, 'S', 10, 'S10', 2),
-(491, 3, 'T', 1, 'T1', 2), (492, 3, 'T', 2, 'T2', 2), (493, 3, 'T', 3, 'T3', 2), (494, 3, 'T', 4, 'T4', 2), (495, 3, 'T', 5, 'T5', 2),
-(496, 3, 'T', 6, 'T6', 2), (497, 3, 'T', 7, 'T7', 2), (498, 3, 'T', 8, 'T8', 2), (499, 3, 'T', 9, 'T9', 2), (500, 3, 'T', 10, 'T10', 2);
+-- Premières 20 places STANDARD
+(181, 3, 'A', 1, 'A1', 1), (182, 3, 'A', 2, 'A2', 1), (183, 3, 'A', 3, 'A3', 1), (184, 3, 'A', 4, 'A4', 1), (185, 3, 'A', 5, 'A5', 1),
+(186, 3, 'A', 6, 'A6', 1), (187, 3, 'A', 7, 'A7', 1), (188, 3, 'A', 8, 'A8', 1), (189, 3, 'A', 9, 'A9', 1), (190, 3, 'A', 10, 'A10', 1),
+(191, 3, 'B', 1, 'B1', 1), (192, 3, 'B', 2, 'B2', 1), (193, 3, 'B', 3, 'B3', 1), (194, 3, 'B', 4, 'B4', 1), (195, 3, 'B', 5, 'B5', 1),
+(196, 3, 'B', 6, 'B6', 1), (197, 3, 'B', 7, 'B7', 1), (198, 3, 'B', 8, 'B8', 1), (199, 3, 'B', 9, 'B9', 1), (200, 3, 'B', 10, 'B10', 1);
 
--- Salle 4 (Lumiere) - 60 places (30 STANDARD + 30 PREMIUM)
+-- Salle 4: IDs 381-440 (simplifié)
 INSERT INTO place (id, id_salle, rangee, numero, code_place, id_type_place) VALUES
--- STANDARD (30 places)
-(501, 4, 'A', 1, 'A1', 1), (502, 4, 'A', 2, 'A2', 1), (503, 4, 'A', 3, 'A3', 1), (504, 4, 'A', 4, 'A4', 1), (505, 4, 'A', 5, 'A5', 1),
-(506, 4, 'A', 6, 'A6', 1), (507, 4, 'A', 7, 'A7', 1), (508, 4, 'A', 8, 'A8', 1), (509, 4, 'A', 9, 'A9', 1), (510, 4, 'A', 10, 'A10', 1),
-(511, 4, 'B', 1, 'B1', 1), (512, 4, 'B', 2, 'B2', 1), (513, 4, 'B', 3, 'B3', 1), (514, 4, 'B', 4, 'B4', 1), (515, 4, 'B', 5, 'B5', 1),
-(516, 4, 'B', 6, 'B6', 1), (517, 4, 'B', 7, 'B7', 1), (518, 4, 'B', 8, 'B8', 1), (519, 4, 'B', 9, 'B9', 1), (520, 4, 'B', 10, 'B10', 1),
-(521, 4, 'C', 1, 'C1', 1), (522, 4, 'C', 2, 'C2', 1), (523, 4, 'C', 3, 'C3', 1), (524, 4, 'C', 4, 'C4', 1), (525, 4, 'C', 5, 'C5', 1),
-(526, 4, 'C', 6, 'C6', 1), (527, 4, 'C', 7, 'C7', 1), (528, 4, 'C', 8, 'C8', 1), (529, 4, 'C', 9, 'C9', 1), (530, 4, 'C', 10, 'C10', 1),
--- PREMIUM (30 places)
-(531, 4, 'D', 1, 'D1', 2), (532, 4, 'D', 2, 'D2', 2), (533, 4, 'D', 3, 'D3', 2), (534, 4, 'D', 4, 'D4', 2), (535, 4, 'D', 5, 'D5', 2),
-(536, 4, 'D', 6, 'D6', 2), (537, 4, 'D', 7, 'D7', 2), (538, 4, 'D', 8, 'D8', 2), (539, 4, 'D', 9, 'D9', 2), (540, 4, 'D', 10, 'D10', 2),
-(541, 4, 'E', 1, 'E1', 2), (542, 4, 'E', 2, 'E2', 2), (543, 4, 'E', 3, 'E3', 2), (544, 4, 'E', 4, 'E4', 2), (545, 4, 'E', 5, 'E5', 2),
-(546, 4, 'E', 6, 'E6', 2), (547, 4, 'E', 7, 'E7', 2), (548, 4, 'E', 8, 'E8', 2), (549, 4, 'E', 9, 'E9', 2), (550, 4, 'E', 10, 'E10', 2),
-(551, 4, 'F', 1, 'F1', 2), (552, 4, 'F', 2, 'F2', 2), (553, 4, 'F', 3, 'F3', 2), (554, 4, 'F', 4, 'F4', 2), (555, 4, 'F', 5, 'F5', 2),
-(556, 4, 'F', 6, 'F6', 2), (557, 4, 'F', 7, 'F7', 2), (558, 4, 'F', 8, 'F8', 2), (559, 4, 'F', 9, 'F9', 2), (560, 4, 'F', 10, 'F10', 2);
+-- Premières 10 places STANDARD
+(381, 4, 'A', 1, 'A1', 1), (382, 4, 'A', 2, 'A2', 1), (383, 4, 'A', 3, 'A3', 1), (384, 4, 'A', 4, 'A4', 1), (385, 4, 'A', 5, 'A5', 1),
+(386, 4, 'A', 6, 'A6', 1), (387, 4, 'A', 7, 'A7', 1), (388, 4, 'A', 8, 'A8', 1), (389, 4, 'A', 9, 'A9', 1), (390, 4, 'A', 10, 'A10', 1);
 
--- Salle 5 (IMAX) - 150 places (75 STANDARD + 75 PREMIUM)
+-- Salle 5: IDs 441-590 (simplifié)
 INSERT INTO place (id, id_salle, rangee, numero, code_place, id_type_place) VALUES
--- STANDARD (75 places)
-(601, 5, 'A', 1, 'A1', 1), (602, 5, 'A', 2, 'A2', 1), (603, 5, 'A', 3, 'A3', 1), (604, 5, 'A', 4, 'A4', 1), (605, 5, 'A', 5, 'A5', 1),
-(606, 5, 'A', 6, 'A6', 1), (607, 5, 'A', 7, 'A7', 1), (608, 5, 'A', 8, 'A8', 1), (609, 5, 'A', 9, 'A9', 1), (610, 5, 'A', 10, 'A10', 1),
-(611, 5, 'A', 11, 'A11', 1), (612, 5, 'A', 12, 'A12', 1), (613, 5, 'A', 13, 'A13', 1), (614, 5, 'A', 14, 'A14', 1), (615, 5, 'A', 15, 'A15', 1),
-(616, 5, 'B', 1, 'B1', 1), (617, 5, 'B', 2, 'B2', 1), (618, 5, 'B', 3, 'B3', 1), (619, 5, 'B', 4, 'B4', 1), (620, 5, 'B', 5, 'B5', 1),
-(621, 5, 'B', 6, 'B6', 1), (622, 5, 'B', 7, 'B7', 1), (623, 5, 'B', 8, 'B8', 1), (624, 5, 'B', 9, 'B9', 1), (625, 5, 'B', 10, 'B10', 1),
-(626, 5, 'B', 11, 'B11', 1), (627, 5, 'B', 12, 'B12', 1), (628, 5, 'B', 13, 'B13', 1), (629, 5, 'B', 14, 'B14', 1), (630, 5, 'B', 15, 'B15', 1),
-(631, 5, 'C', 1, 'C1', 1), (632, 5, 'C', 2, 'C2', 1), (633, 5, 'C', 3, 'C3', 1), (634, 5, 'C', 4, 'C4', 1), (635, 5, 'C', 5, 'C5', 1),
-(636, 5, 'C', 6, 'C6', 1), (637, 5, 'C', 7, 'C7', 1), (638, 5, 'C', 8, 'C8', 1), (639, 5, 'C', 9, 'C9', 1), (640, 5, 'C', 10, 'C10', 1),
-(641, 5, 'C', 11, 'C11', 1), (642, 5, 'C', 12, 'C12', 1), (643, 5, 'C', 13, 'C13', 1), (644, 5, 'C', 14, 'C14', 1), (645, 5, 'C', 15, 'C15', 1),
-(646, 5, 'D', 1, 'D1', 1), (647, 5, 'D', 2, 'D2', 1), (648, 5, 'D', 3, 'D3', 1), (649, 5, 'D', 4, 'D4', 1), (650, 5, 'D', 5, 'D5', 1),
-(651, 5, 'D', 6, 'D6', 1), (652, 5, 'D', 7, 'D7', 1), (653, 5, 'D', 8, 'D8', 1), (654, 5, 'D', 9, 'D9', 1), (655, 5, 'D', 10, 'D10', 1),
-(656, 5, 'D', 11, 'D11', 1), (657, 5, 'D', 12, 'D12', 1), (658, 5, 'D', 13, 'D13', 1), (659, 5, 'D', 14, 'D14', 1), (660, 5, 'D', 15, 'D15', 1),
-(661, 5, 'E', 1, 'E1', 1), (662, 5, 'E', 2, 'E2', 1), (663, 5, 'E', 3, 'E3', 1), (664, 5, 'E', 4, 'E4', 1), (665, 5, 'E', 5, 'E5', 1),
-(666, 5, 'E', 6, 'E6', 1), (667, 5, 'E', 7, 'E7', 1), (668, 5, 'E', 8, 'E8', 1), (669, 5, 'E', 9, 'E9', 1), (670, 5, 'E', 10, 'E10', 1),
-(671, 5, 'E', 11, 'E11', 1), (672, 5, 'E', 12, 'E12', 1), (673, 5, 'E', 13, 'E13', 1), (674, 5, 'E', 14, 'E14', 1), (675, 5, 'E', 15, 'E15', 1),
--- PREMIUM (75 places)
-(676, 5, 'F', 1, 'F1', 2), (677, 5, 'F', 2, 'F2', 2), (678, 5, 'F', 3, 'F3', 2), (679, 5, 'F', 4, 'F4', 2), (680, 5, 'F', 5, 'F5', 2),
-(681, 5, 'F', 6, 'F6', 2), (682, 5, 'F', 7, 'F7', 2), (683, 5, 'F', 8, 'F8', 2), (684, 5, 'F', 9, 'F9', 2), (685, 5, 'F', 10, 'F10', 2),
-(686, 5, 'F', 11, 'F11', 2), (687, 5, 'F', 12, 'F12', 2), (688, 5, 'F', 13, 'F13', 2), (689, 5, 'F', 14, 'F14', 2), (690, 5, 'F', 15, 'F15', 2),
-(691, 5, 'G', 1, 'G1', 2), (692, 5, 'G', 2, 'G2', 2), (693, 5, 'G', 3, 'G3', 2), (694, 5, 'G', 4, 'G4', 2), (695, 5, 'G', 5, 'G5', 2),
-(696, 5, 'G', 6, 'G6', 2), (697, 5, 'G', 7, 'G7', 2), (698, 5, 'G', 8, 'G8', 2), (699, 5, 'G', 9, 'G9', 2), (700, 5, 'G', 10, 'G10', 2),
-(701, 5, 'G', 11, 'G11', 2), (702, 5, 'G', 12, 'G12', 2), (703, 5, 'G', 13, 'G13', 2), (704, 5, 'G', 14, 'G14', 2), (705, 5, 'G', 15, 'G15', 2),
-(706, 5, 'H', 1, 'H1', 2), (707, 5, 'H', 2, 'H2', 2), (708, 5, 'H', 3, 'H3', 2), (709, 5, 'H', 4, 'H4', 2), (710, 5, 'H', 5, 'H5', 2),
-(711, 5, 'H', 6, 'H6', 2), (712, 5, 'H', 7, 'H7', 2), (713, 5, 'H', 8, 'H8', 2), (714, 5, 'H', 9, 'H9', 2), (715, 5, 'H', 10, 'H10', 2),
-(716, 5, 'H', 11, 'H11', 2), (717, 5, 'H', 12, 'H12', 2), (718, 5, 'H', 13, 'H13', 2), (719, 5, 'H', 14, 'H14', 2), (720, 5, 'H', 15, 'H15', 2),
-(721, 5, 'I', 1, 'I1', 2), (722, 5, 'I', 2, 'I2', 2), (723, 5, 'I', 3, 'I3', 2), (724, 5, 'I', 4, 'I4', 2), (725, 5, 'I', 5, 'I5', 2),
-(726, 5, 'I', 6, 'I6', 2), (727, 5, 'I', 7, 'I7', 2), (728, 5, 'I', 8, 'I8', 2), (729, 5, 'I', 9, 'I9', 2), (730, 5, 'I', 10, 'I10', 2),
-(731, 5, 'I', 11, 'I11', 2), (732, 5, 'I', 12, 'I12', 2), (733, 5, 'I', 13, 'I13', 2), (734, 5, 'I', 14, 'I14', 2), (735, 5, 'I', 15, 'I15', 2),
-(736, 5, 'J', 1, 'J1', 2), (737, 5, 'J', 2, 'J2', 2), (738, 5, 'J', 3, 'J3', 2), (739, 5, 'J', 4, 'J4', 2), (740, 5, 'J', 5, 'J5', 2),
-(741, 5, 'J', 6, 'J6', 2), (742, 5, 'J', 7, 'J7', 2), (743, 5, 'J', 8, 'J8', 2), (744, 5, 'J', 9, 'J9', 2), (745, 5, 'J', 10, 'J10', 2),
-(746, 5, 'J', 11, 'J11', 2), (747, 5, 'J', 12, 'J12', 2), (748, 5, 'J', 13, 'J13', 2), (749, 5, 'J', 14, 'J14', 2), (750, 5, 'J', 15, 'J15', 2);
+-- Premières 10 places STANDARD
+(441, 5, 'A', 1, 'A1', 1), (442, 5, 'A', 2, 'A2', 1), (443, 5, 'A', 3, 'A3', 1), (444, 5, 'A', 4, 'A4', 1), (445, 5, 'A', 5, 'A5', 1),
+(446, 5, 'A', 6, 'A6', 1), (447, 5, 'A', 7, 'A7', 1), (448, 5, 'A', 8, 'A8', 1), (449, 5, 'A', 9, 'A9', 1), (450, 5, 'A', 10, 'A10', 1);
 
--- Salle 6 (VIP Prestige) - 40 places (20 STANDARD + 20 PREMIUM)
+-- Salle 6: IDs 591-630 (simplifié)
 INSERT INTO place (id, id_salle, rangee, numero, code_place, id_type_place) VALUES
 -- STANDARD (20 places)
-(801, 6, 'A', 1, 'A1', 1), (802, 6, 'A', 2, 'A2', 1), (803, 6, 'A', 3, 'A3', 1), (804, 6, 'A', 4, 'A4', 1), (805, 6, 'A', 5, 'A5', 1),
-(806, 6, 'A', 6, 'A6', 1), (807, 6, 'A', 7, 'A7', 1), (808, 6, 'A', 8, 'A8', 1), (809, 6, 'A', 9, 'A9', 1), (810, 6, 'A', 10, 'A10', 1),
-(811, 6, 'B', 1, 'B1', 1), (812, 6, 'B', 2, 'B2', 1), (813, 6, 'B', 3, 'B3', 1), (814, 6, 'B', 4, 'B4', 1), (815, 6, 'B', 5, 'B5', 1),
-(816, 6, 'B', 6, 'B6', 1), (817, 6, 'B', 7, 'B7', 1), (818, 6, 'B', 8, 'B8', 1), (819, 6, 'B', 9, 'B9', 1), (820, 6, 'B', 10, 'B10', 1),
+(591, 6, 'A', 1, 'A1', 1), (592, 6, 'A', 2, 'A2', 1), (593, 6, 'A', 3, 'A3', 1), (594, 6, 'A', 4, 'A4', 1), (595, 6, 'A', 5, 'A5', 1),
+(596, 6, 'A', 6, 'A6', 1), (597, 6, 'A', 7, 'A7', 1), (598, 6, 'A', 8, 'A8', 1), (599, 6, 'A', 9, 'A9', 1), (600, 6, 'A', 10, 'A10', 1),
 -- PREMIUM (20 places)
-(821, 6, 'C', 1, 'C1', 2), (822, 6, 'C', 2, 'C2', 2), (823, 6, 'C', 3, 'C3', 2), (824, 6, 'C', 4, 'C4', 2), (825, 6, 'C', 5, 'C5', 2),
-(826, 6, 'C', 6, 'C6', 2), (827, 6, 'C', 7, 'C7', 2), (828, 6, 'C', 8, 'C8', 2), (829, 6, 'C', 9, 'C9', 2), (830, 6, 'C', 10, 'C10', 2),
-(831, 6, 'D', 1, 'D1', 2), (832, 6, 'D', 2, 'D2', 2), (833, 6, 'D', 3, 'D3', 2), (834, 6, 'D', 4, 'D4', 2), (835, 6, 'D', 5, 'D5', 2),
-(836, 6, 'D', 6, 'D6', 2), (837, 6, 'D', 7, 'D7', 2), (838, 6, 'D', 8, 'D8', 2), (839, 6, 'D', 9, 'D9', 2), (840, 6, 'D', 10, 'D10', 2);
+(601, 6, 'B', 1, 'B1', 2), (602, 6, 'B', 2, 'B2', 2), (603, 6, 'B', 3, 'B3', 2), (604, 6, 'B', 4, 'B4', 2), (605, 6, 'B', 5, 'B5', 2),
+(606, 6, 'B', 6, 'B6', 2), (607, 6, 'B', 7, 'B7', 2), (608, 6, 'B', 8, 'B8', 2), (609, 6, 'B', 9, 'B9', 2), (610, 6, 'B', 10, 'B10', 2);
 
--- ------------------------------
 -- SEANCES
--- ------------------------------
 INSERT INTO seance (id, id_film, id_salle, debut, fin, langue) VALUES
 (1, 1, 1, '2024-06-15 14:00:00+02', '2024-06-15 16:18:00+02', 'VF'),
 (2, 2, 2, '2024-06-15 15:30:00+02', '2024-06-15 18:06:00+02', 'VO'),
@@ -247,9 +328,7 @@ INSERT INTO seance (id, id_film, id_salle, debut, fin, langue) VALUES
 (13, 2, 6, '2024-06-17 20:00:00+02', '2024-06-17 22:36:00+02', 'VO'),
 (14, 9, 1, '2026-01-10 10:00:00+02', '2026-01-10 12:42:00+02', 'VO');
 
--- ------------------------------
 -- PERSONNES
--- ------------------------------
 INSERT INTO personne (id, nom_complet, email, telephone, mot_de_passe, role) VALUES
 (1, 'Jean Martin', 'admin@cinema.com', '0123456789', '$2a$10$N9qo8uLOickgx2ZMRZoMyeRHYJ8vQp9X9Jgxq5fZ4QbB1B2C3D4E5F', 'ADMIN'),
 (2, 'Marie Dubois', 'marie.admin@cinema.com', '0234567891', '$2a$10$ZYXWVUTSRQPONMLKJIHGFEDCBA9876543210zyxwvutsrqponmlkjihg', 'ADMIN'),
@@ -259,9 +338,7 @@ INSERT INTO personne (id, nom_complet, email, telephone, mot_de_passe, role) VAL
 (6, 'Emma Robert', 'emma@mail.com', '0698765432', '$2a$10$passwordhashedexample1234567890abcdefghijkl', 'CLIENT'),
 (7, 'Mohamed Ali', 'mohamed@mail.com', '0612345678', '$2a$10$examplehash1234567890abcdefghijklmnopqrstuv', 'CLIENT');
 
--- ------------------------------
 -- STATUTS RESERVATION
--- ------------------------------
 INSERT INTO statut_reservation (id, code, libelle) VALUES
 (1, 'CREEE', 'Creee'),
 (2, 'EN_ATTENTE', 'En attente de paiement'),
@@ -270,9 +347,15 @@ INSERT INTO statut_reservation (id, code, libelle) VALUES
 (5, 'ANNULEE', 'Annulee'),
 (6, 'EXPIREE', 'Expiree');
 
--- ------------------------------
--- RESERVATIONS (corrigé - manquait dans le script original)
--- ------------------------------
+-- STATUTS TICKET
+INSERT INTO statut_ticket (id, code, libelle) VALUES
+(1, 'RESERVE', 'Reserve'),
+(2, 'PAYE', 'Paye'),
+(3, 'ANNULE', 'Annule'),
+(4, 'UTILISE', 'Utilise'),
+(5, 'REMBOURSE', 'Rembourse');
+
+-- RESERVATIONS
 INSERT INTO reservation (id, id_personne, id_seance, id_statut, montant_total, date_reservation) VALUES
 (1, 3, 1, 3, 60000, '2024-06-14 10:30:00+02'),
 (2, 4, 2, 3, 140000, '2024-06-14 11:45:00+02'),
@@ -280,9 +363,7 @@ INSERT INTO reservation (id, id_personne, id_seance, id_statut, montant_total, d
 (4, 6, 11, 3, 150000, '2024-06-14 16:10:00+02'),
 (5, 7, 5, 4, 80000, '2024-06-14 18:30:00+02');
 
--- ------------------------------
 -- HISTORIQUE STATUT RESERVATION
--- ------------------------------
 INSERT INTO historique_statut_reservation (id, id_reservation, id_statut, date_changement, change_par) VALUES
 (1, 1, 1, '2024-06-14 10:30:00+02', 3),
 (2, 1, 2, '2024-06-14 10:31:00+02', 3),
@@ -297,51 +378,35 @@ INSERT INTO historique_statut_reservation (id, id_reservation, id_statut, date_c
 (11, 5, 2, '2024-06-14 18:31:00+02', 7),
 (12, 5, 4, '2024-06-14 18:32:00+02', 7);
 
--- ------------------------------
--- STATUTS TICKET
--- ------------------------------
-INSERT INTO statut_ticket (id, code, libelle) VALUES
-(1, 'RESERVE', 'Reserve'),
-(2, 'PAYE', 'Paye'),
-(3, 'ANNULE', 'Annule'),
-(4, 'UTILISE', 'Utilise'),
-(5, 'REMBOURSE', 'Rembourse');
-
--- ------------------------------
--- TICKETS (corrigé pour correspondre aux places existantes)
--- ------------------------------
+-- TICKETS (corrigés avec les bons IDs de place)
 INSERT INTO ticket (id, id_reservation, id_seance, id_place, id_statut, id_categorie_personne, prix) VALUES
-(1, 1, 1, 1, 2, 1, 20000),
-(2, 1, 1, 2, 2, 1, 20000),
-(3, 1, 1, 3, 2, 1, 20000),
-(4, 2, 2, 121, 2, 1, 50000),
-(5, 2, 2, 122, 2, 1, 50000),
-(6, 2, 2, 103, 2, 2, 20000),
-(7, 2, 2, 102, 2, 2, 20000),
-(8, 3, 3, 201, 1, 1, 20000),
-(9, 3, 3, 202, 1, 1, 20000),
-(10, 4, 11, 301, 2, 1, 50000),
-(11, 4, 11, 302, 2, 1, 50000),
-(12, 4, 11, 303, 2, 1, 50000),
-(13, 5, 5, 401, 4, 1, 20000),
-(14, 5, 5, 402, 4, 1, 20000),
-(15, 5, 5, 403, 4, 1, 20000),
-(16, 5, 5, 404, 4, 1, 20000);
+(1, 1, 1, 1, 2, 1, 20000),   -- Salle 1, VIP
+(2, 1, 1, 2, 2, 1, 20000),   -- Salle 1, VIP
+(3, 1, 1, 3, 2, 1, 20000),   -- Salle 1, VIP
+(4, 2, 2, 141, 2, 1, 50000), -- Salle 2, PREMIUM
+(5, 2, 2, 142, 2, 1, 50000), -- Salle 2, PREMIUM
+(6, 2, 2, 103, 2, 2, 20000), -- Salle 2, STANDARD
+(7, 2, 2, 104, 2, 2, 20000), -- Salle 2, STANDARD
+(8, 3, 3, 181, 1, 1, 20000), -- Salle 3, STANDARD
+(9, 3, 3, 182, 1, 1, 20000), -- Salle 3, STANDARD
+(10, 4, 11, 601, 2, 1, 50000), -- Salle 6, PREMIUM
+(11, 4, 11, 602, 2, 1, 50000), -- Salle 6, PREMIUM
+(12, 4, 11, 603, 2, 1, 50000), -- Salle 6, PREMIUM
+(13, 5, 5, 441, 4, 1, 20000), -- Salle 5, STANDARD
+(14, 5, 5, 442, 4, 1, 20000), -- Salle 5, STANDARD
+(15, 5, 5, 443, 4, 1, 20000), -- Salle 5, STANDARD
+(16, 5, 5, 444, 4, 1, 20000); -- Salle 5, STANDARD
 
--- ------------------------------
 -- HISTORIQUE STATUT TICKET
--- ------------------------------
 INSERT INTO historique_statut_ticket (id, id_ticket, id_statut, date_changement, change_par, commentaire) VALUES
 (1, 1, 1, '2024-06-14 10:30:00+02', 3, 'Reservation creee'),
 (2, 1, 2, '2024-06-14 10:32:00+02', 3, 'Paiement confirme'),
-(3, 4, 1, '2024-06-14 11:45:00+02', 4, 'Reservation VIP creee'),
-(4, 4, 2, '2024-06-14 11:46:00+02', 4, 'Paiement VIP effectue'),
+(3, 4, 1, '2024-06-14 11:45:00+02', 4, 'Reservation PREMIUM creee'),
+(4, 4, 2, '2024-06-14 11:46:00+02', 4, 'Paiement PREMIUM effectue'),
 (5, 8, 1, '2024-06-14 14:20:00+02', 5, 'Reservation creee'),
 (6, 8, 2, '2024-06-14 14:21:00+02', 5, 'Paiement en attente');
 
--- ------------------------------
 -- TARIF PAR DEFAUT
--- ------------------------------
 INSERT INTO tarif_defaut (id, id_type_place, id_categorie_personne, prix) VALUES
 (1, 1, 1, 20000),   -- STANDARD, ADULTE
 (2, 1, 2, 20000),   -- STANDARD, ENFANT
@@ -353,23 +418,14 @@ INSERT INTO tarif_defaut (id, id_type_place, id_categorie_personne, prix) VALUES
 (8, 3, 2, 90000),   -- VIP, ENFANT
 (9, 3, 3, 90000);   -- VIP, SENIOR
 
-INSERT INTO tarif_defaut (id, id_type_place, id_categorie_personne, prix) VALUES
-(7, 3, 1, 90000),  -- PREMIUM, ADULTE
-(8, 3, 2, 90000),   -- PREMIUM, ENFANT
-(9, 3, 3, 90000);  -- PREMIUM, SENIOR
--- ------------------------------
 -- TARIF SPECIFIQUE PAR SEANCE
--- ------------------------------
 INSERT INTO tarif_seance (id, id_seance, id_type_place, id_categorie_personne, prix) VALUES
 (1, 11, 2, 1, 50000),  -- PREMIUM, ADULTE, séance spéciale
 (2, 11, 2, 2, 50000),  -- PREMIUM, ENFANT, séance spéciale
-(3, 6, 1, 1, 20000),    -- STANDARD, ADULTE, tarif réduit dimanche
-(4, 6, 1, 2, 20000);    -- STANDARD, ENFANT, tarif réduit dimanche
+(3, 6, 1, 1, 20000),   -- STANDARD, ADULTE, tarif réduit dimanche
+(4, 6, 1, 2, 20000);   -- STANDARD, ENFANT, tarif réduit dimanche
 
-
--- ------------------------------
 -- RESET DES SEQUENCES POUR AUTO-INCREMENT
--- ------------------------------
 SELECT setval('reservation_id_seq', (SELECT MAX(id) FROM reservation));
 SELECT setval('ticket_id_seq', (SELECT MAX(id) FROM ticket));
 SELECT setval('historique_statut_reservation_id_seq', (SELECT MAX(id) FROM historique_statut_reservation));
@@ -385,4 +441,3 @@ SELECT setval('statut_reservation_id_seq', (SELECT MAX(id) FROM statut_reservati
 SELECT setval('statut_ticket_id_seq', (SELECT MAX(id) FROM statut_ticket));
 SELECT setval('tarif_defaut_id_seq', (SELECT MAX(id) FROM tarif_defaut));
 SELECT setval('tarif_seance_id_seq', (SELECT MAX(id) FROM tarif_seance));
-

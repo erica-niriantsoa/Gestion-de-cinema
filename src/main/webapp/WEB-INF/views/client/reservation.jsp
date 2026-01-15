@@ -108,14 +108,17 @@ let categories = [];
 
 // Charger les catégories depuis le serveur
 try {
-    // Utiliser une variable script pour éviter les problèmes d'échappement
-    const categoriesData = <c:out value="${categoriesJson}" escapeXml="false" />;
-    if (categoriesData && Array.isArray(categoriesData)) {
-        categories = categoriesData;
-        console.log('Categories chargées depuis le serveur:', categories);
-    } else {
-        console.error('Format de catégories invalide:', categoriesData);
-    }
+    // Créer un tableau JavaScript directement depuis les données JSP
+    categories = [
+        <c:forEach var="cat" items="${categories}" varStatus="status">
+            {
+                id: ${cat.id},
+                libelle: "${cat.libelle}"
+            }<c:if test="${!status.last}">,</c:if>
+        </c:forEach>
+    ];
+
+    console.log('Categories chargées depuis le serveur:', categories);
 } catch (e) {
     console.error('Erreur lors du chargement des catégories:', e);
 }

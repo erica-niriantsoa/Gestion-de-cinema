@@ -40,71 +40,8 @@ LEFT JOIN statut_ticket st ON t.id_statut = st.id
 GROUP BY r.id, p.id, f.id, s.id, sal.id, sr.id;
 
 
--- Vue pour les places disponibles (CORRIGÉE)
-CREATE VIEW places_disponibles AS
-SELECT
-    s.id as seance_id,
-    p.*,
-    tp.libelle as type_place
-FROM place p
-CROSS JOIN seance s
-JOIN type_place tp ON p.id_type_place = tp.id  -- AJOUTER CETTE JOINTURE
-WHERE s.id_salle = p.id_salle
-AND NOT EXISTS (
-    SELECT 1 FROM ticket t
-    WHERE t.id_seance = s.id
-    AND t.id_place = p.id
-    AND t.id_statut NOT IN (
-        SELECT id FROM statut_ticket WHERE code IN ('ANNULE', 'REMBOURSE')
-    )
-);
-
--- Vue pour les statistiques
-CREATE VIEW statistiques_reservations AS
-SELECT 
-    DATE(date_reservation) as jour,
-    COUNT(*) as nb_reservations,
-    SUM(montant_total) as chiffre_affaire,
-    AVG(montant_total) as panier_moyen
-FROM reservation
-GROUP BY DATE(date_reservation);
-
--- Version optimisée avec LEFT JOIN
+-- Vue pour les places disponibles (VERSION FINALE)
 CREATE OR REPLACE VIEW places_disponibles AS
-SELECT
-    s.id as seance_id,
-    p.id as place_id,
-    p.code_place,
-    p.rangee,
-    p.numero,
-    tp.libelle as type_place,
-    s.debut as seance_debut,
-    f.titre as film_titre,
-    sal.nom as salle_nom
-FROM place p
-JOIN type_place tp ON p.id_type_place = tp.id
-JOIN salle sal ON p.id_salle = sal.id
-CROSS JOIN seance s
-JOIN film f ON s.id_film = f.id
-WHERE s.id_salle = p.id_salle
-AND NOT EXISTS (
-    SELECT 1 FROM ticket t
-    WHERE t.id_seance = s.id
-    AND t.id_place = p.id
-    AND t.id_statut NOT IN (
-        SELECT id FROM statut_ticket 
-        WHERE code IN ('ANNULE', 'REMBOURSE')
-    )
-);
-
--- Créer d'abord une vue pour les statuts actifs
-CREATE OR REPLACE VIEW statuts_ticket_actifs AS
-SELECT id FROM statut_ticket 
-WHERE code NOT IN ('ANNULE', 'REMBOURSE', 'EXPIRE');
-
-
---place disponibles
-CREATE VIEW places_disponibles AS
 SELECT
     s.id as seance_id,
     p.id as place_id,
@@ -123,7 +60,6 @@ JOIN salle sal ON p.id_salle = sal.id
 CROSS JOIN seance s
 JOIN film f ON s.id_film = f.id
 WHERE s.id_salle = p.id_salle
-AND s.debut > NOW()  -- Seulement les séances futures
 AND NOT EXISTS (
     SELECT 1 FROM ticket t
     WHERE t.id_seance = s.id
