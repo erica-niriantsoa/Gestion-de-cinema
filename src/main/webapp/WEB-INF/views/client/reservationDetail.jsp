@@ -101,7 +101,7 @@
                     <tr>
                         <td>${res.reservationId}</td>
                         <td><c:if test="${res.dateReservation != null}">${res.dateReservationFormatted}</c:if></td>
-                        <td>${res.montantTotal} €</td>
+                        <td>${res.montantTotal} AR</td>
                         <td>${res.clientNom}</td>
                         <td>${res.clientEmail}</td>
                         <td>${res.filmTitre}</td>

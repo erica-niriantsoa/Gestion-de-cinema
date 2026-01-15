@@ -104,7 +104,7 @@
                         <td>${ticket.seance.salle.nom}</td>
                         <td>${ticket.place.codePlace}</td>
                         <td>${ticket.categoriePersonne.libelle}</td>
-                        <td>${ticket.prix} €</td>
+                        <td>${ticket.prix} AR</td>
                         <td><span class="status ${ticket.statut.code == 'PAYE' ? 'payé' : 'en_attente'}">${ticket.statut.libelle}</span></td>
                         <td>
                             <c:choose>

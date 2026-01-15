@@ -239,20 +239,7 @@
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     cursor: pointer;
     overflow: hidden;
-}
-
-.place-item::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 100%;
-    background: linear-gradient(135deg, 
-        rgba(255, 215, 0, 0.05), 
-        transparent 30%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    user-select: none;
 }
 
 .place-item:hover {
@@ -263,6 +250,18 @@
 
 .place-item:hover::before {
     opacity: 1;
+}
+
+/* État sélectionné */
+.place-item.selected {
+    border-color: var(--accent-color);
+    background: linear-gradient(145deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+    box-shadow: 0 8px 30px rgba(255, 215, 0, 0.3);
+}
+
+.place-item.selected::before {
+    opacity: 1;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.08));
 }
 
 .place-checkbox {

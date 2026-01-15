@@ -158,3 +158,11 @@ JOIN salle sal ON s.id_salle = sal.id
 JOIN place p ON p.id_salle = sal.id
 GROUP BY s.id, f.titre, s.debut, s.fin, sal.nom, sal.id, sal.capacite
 ORDER BY s.debut DESC;
+
+
+UPDATE tarif_defaut SET prix = 
+    CASE 
+        WHEN id_type_place = 1 THEN 1000  -- STANDARD: 10€
+        WHEN id_type_place = 2 THEN 1500  -- PREMIUM: 15€
+        WHEN id_type_place = 3 THEN 2000  -- VIP: 20€
+    END;

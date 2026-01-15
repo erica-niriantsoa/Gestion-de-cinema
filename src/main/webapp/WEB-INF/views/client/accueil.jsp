@@ -176,7 +176,7 @@
                                     </span>
                                 </td>
                                 <td class="revenue-cell">
-                                    ${row.revenue} AR
+                                    ${row.revenue} €
                                 </td>
                                 <td class="action-cell">
                                     <!-- LIEN VERS LA RÉSERVATION -->
@@ -408,7 +408,7 @@
                 langueCell.className = 'langue-cell';
                 
                 const revenueCell = newRow.insertCell();
-                revenueCell.textContent = seanceData.revenue.toFixed(2) + ' €';
+                revenueCell.textContent = seanceData.revenue.toFixed(2) + ' AR';
                 revenueCell.className = 'revenue-cell';
                 
                 // Cellule d'action avec le bouton Réserver

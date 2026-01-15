@@ -53,7 +53,7 @@
                     <td>${t.seanceDebut||''}</td>
                     <td>${t.place||''}</td>
                     <td>${t.categorie||''}</td>
-                    <td>${t.prix!=null?t.prix + ' €': ''}</td>
+                    <td>${t.prix!=null?t.prix + ' AR': ''}</td>
                     <td>${t.statut?'<span class="badge '+(t.statut.toLowerCase().includes('pay')? 'payee':'reserve')+'">'+t.statut+'</span>':''}</td>
                 `;
                 tbody.appendChild(tr);

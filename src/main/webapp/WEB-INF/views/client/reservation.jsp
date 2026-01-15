@@ -1,5 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -71,6 +71,15 @@
                 <div class="card-title"><i class="fas fa-user"></i> Vos informations</div>
                 <form id="clientForm">
                     <div class="form-group">
+                        <label class="form-label">Catégorie de personne *</label>
+                        <select id="defaultCategorie" class="form-control" required>
+                            <option value="">Choisissez une catégorie</option>
+                            <c:forEach var="cat" items="${categories}">
+                                <option value="${cat.id}">${cat.libelle}</option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Nom complet *</label>
                         <input type="text" id="nomComplet" class="form-control" placeholder="Votre nom complet" required>
                     </div>
@@ -95,17 +104,77 @@
 
 <script>
 let selectedPlaces = new Map();
-const categories = JSON.parse('${categoriesJson}'); // Depuis le serveur
+let categories = [];
 
-console.log('Categories loaded:', categories); // Debug
+// Charger les catégories depuis le serveur
+try {
+    // Utiliser une variable script pour éviter les problèmes d'échappement
+    const categoriesData = <c:out value="${categoriesJson}" escapeXml="false" />;
+    if (categoriesData && Array.isArray(categoriesData)) {
+        categories = categoriesData;
+        console.log('Categories chargées depuis le serveur:', categories);
+    } else {
+        console.error('Format de catégories invalide:', categoriesData);
+    }
+} catch (e) {
+    console.error('Erreur lors du chargement des catégories:', e);
+}
+
+// Vérification finale
+if (!categories || categories.length === 0) {
+    console.error('ERREUR CRITIQUE: Aucune catégorie disponible!');
+    alert('Erreur: Les catégories ne sont pas disponibles. Veuillez recharger la page.');
+}
+
+console.log('Categories finales:', categories); // Debug
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initial setup if needed
     console.log('Page loaded, categories:', categories); // Debug
+
+    // Écouteur pour le changement de catégorie par défaut
+    const defaultCategorieSelect = document.getElementById('defaultCategorie');
+    defaultCategorieSelect.addEventListener('change', function() {
+        const newCategorieId = parseInt(this.value);
+        if (newCategorieId && selectedPlaces.size > 0) {
+            // Mettre à jour toutes les places sélectionnées avec la nouvelle catégorie
+            for (const [placeId, place] of selectedPlaces.entries()) {
+                place.categorieId = newCategorieId;
+            }
+            updateDisplay();
+            console.log('Catégorie mise à jour pour toutes les places sélectionnées:', newCategorieId);
+        }
+    });
+
+    // Ajouter des event listeners pour améliorer l'interactivité
+    const placeItems = document.querySelectorAll('.place-item');
+    placeItems.forEach(item => {
+        const checkbox = item.querySelector('.place-checkbox');
+        const label = item.querySelector('.place-label');
+
+        // Permettre de cliquer sur tout l'élément place-item
+        item.addEventListener('click', function(e) {
+            // Ne pas déclencher si on clique sur le label ou checkbox directement
+            if (e.target === label || e.target === checkbox) return;
+
+            checkbox.checked = !checkbox.checked;
+            togglePlace(checkbox);
+        });
+
+        // S'assurer que les places déjà cochées ont la classe selected
+        if (checkbox.checked) {
+            item.classList.add('selected');
+        }
+    });
 });
 
 function togglePlace(checkbox) {
     const placeId = checkbox.dataset.placeId;
+    const placeItem = checkbox.closest('.place-item');
+
+    // Récupérer la catégorie sélectionnée dans le formulaire
+    const defaultCategorieSelect = document.getElementById('defaultCategorie');
+    const categorieId = parseInt(defaultCategorieSelect.value) || 1; // Par défaut ADULTE si rien n'est sélectionné
+
     if (checkbox.checked) {
         selectedPlaces.set(placeId, {
             element: checkbox,
@@ -113,12 +182,17 @@ function togglePlace(checkbox) {
             code: checkbox.dataset.code,
             type: checkbox.dataset.type,
             typeId: checkbox.dataset.typeId,
-            categorieId: 1, // Par défaut ADULTE
+            categorieId: categorieId, // Utiliser la catégorie sélectionnée
             prix: 0
         });
+        placeItem.classList.add('selected');
+        console.log('Place sélectionnée:', placeId, 'avec catégorie:', categorieId);
     } else {
         selectedPlaces.delete(placeId);
+        placeItem.classList.remove('selected');
+        console.log('Place désélectionnée:', placeId);
     }
+
     updateDisplay();
 }
 function updateDisplay() {
@@ -137,6 +211,13 @@ function updateDisplay() {
     
     let html = '';
     let total = 0;
+    
+    // Vérifier que les catégories sont disponibles
+    if (!categories || categories.length === 0) {
+        console.error('Catégories non disponibles!');
+        container.innerHTML = '<div style="color: red; padding: 20px;">Erreur: Catégories non disponibles</div>';
+        return;
+    }
     
     // Utiliser une boucle for...of au lieu de forEach pour éviter les problèmes de closure
     for (const [placeId, place] of selectedPlaces.entries()) {
@@ -157,12 +238,12 @@ function updateDisplay() {
         html += '<div class="place-item">' +
                 '<div>' +
                 '<div style="font-weight: bold;">' + place.code + ' - ' + place.type + '</div>' +
-                '<select onchange="updateCategorie(\'' + placeId + '\', this.value)" style="margin-top: 5px; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">' +
+                '<select onchange="updateCategorie(\'' + placeId + '\', this.value)" style="margin-top: 5px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; width: 100%;">' +
                 optionsHtml +
                 '</select>' +
                 '</div>' +
                 '<div style="font-weight: bold; color: #28a745;">' + prix.toLocaleString('fr-FR') + ' AR</div>' +
-                '<button class="remove-btn" onclick="removePlace(\'' + placeId + '\')><i class="fas fa-times"></i></button>' +
+                '<button class="remove-btn" onclick="removePlace(\'' + placeId + '\')"><i class="fas fa-times"></i></button>' +
                 '</div>';
     }
     
@@ -192,7 +273,13 @@ function updateCategorie(placeId, categorieId) {
 
 function removePlace(placeId) {
     const place = selectedPlaces.get(placeId);
-    if (place && place.element) place.element.checked = false;
+    if (place && place.element) {
+        place.element.checked = false;
+        const placeItem = place.element.closest('.place-item');
+        if (placeItem) {
+            placeItem.classList.remove('selected');
+        }
+    }
     selectedPlaces.delete(placeId);
     updateDisplay();
 }
@@ -209,6 +296,12 @@ function confirmReservation() {
     // Validation
     if (selectedPlaces.size === 0) {
         showMessage('Veuillez sélectionner au moins une place', 'error');
+        return;
+    }
+
+    const defaultCategorie = document.getElementById('defaultCategorie').value;
+    if (!defaultCategorie) {
+        showMessage('Veuillez sélectionner une catégorie de personne', 'error');
         return;
     }
     
