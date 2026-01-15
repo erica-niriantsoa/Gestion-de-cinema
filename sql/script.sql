@@ -108,7 +108,7 @@ CREATE TABLE reservation (
     id_personne INT REFERENCES personne(id) NULL, -- nullable pour vente sur place
     id_seance INT REFERENCES seance(id),
     id_statut INT REFERENCES statut_reservation(id),
-    montant_total NUMERIC(6,2) DEFAULT 0,
+    montant_total NUMERIC(12,2) DEFAULT 0,
     date_reservation TIMESTAMPTZ DEFAULT now()
 );
 

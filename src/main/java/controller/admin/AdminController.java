@@ -1,6 +1,7 @@
 package controller.admin;
 
 import entity.*;
+import repository.TicketRepository;
 import service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -34,6 +35,15 @@ public class AdminController {
     
     @Autowired
     private CategoriePersonneService categoriePersonneService;
+    
+    @Autowired
+    private ReservationCompleteService reservationCompleteService;
+    
+    @Autowired
+    private TicketRepository ticketRepository;
+    
+    @Autowired
+    private RevenuMaximalSeanceService revenuMaximalSeanceService;
     
     // ========== PAGE D'ACCUEIL ADMIN ==========
     @GetMapping("/accueil")
@@ -152,6 +162,13 @@ public class AdminController {
         return "redirect:/admin/salles";
     }
     
+    @GetMapping("/sallesDetail")
+    public String sallesDetail(Model model) {
+        List<RevenuMaximalSeance> revenusMaximaux = revenuMaximalSeanceService.findAll();
+        model.addAttribute("revenusMaximaux", revenusMaximaux);
+        return "admin/salles/sallesDetail";
+    }
+    
     // ========== CRUD SEANCES ==========
     @GetMapping("/seances")
     public String listSeances(Model model) {
@@ -257,5 +274,34 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", "Impossible de supprimer: " + e.getMessage());
         }
         return "redirect:/admin/seances";
+    }
+    
+    // ========== GESTION RESERVATIONS ==========
+    @GetMapping("/reservations")
+    public String listReservations(Model model) {
+        List<ReservationComplete> reservations = reservationCompleteService.findAll();
+        model.addAttribute("reservations", reservations);
+        return "client/reservationDetail";
+    }
+    
+    // ========== GESTION TICKETS ==========
+    @GetMapping("/tickets")
+    public String listTickets(Model model) {
+        List<Ticket> tickets = ticketRepository.findAll();
+        // Charger les relations nécessaires
+        tickets.forEach(ticket -> {
+            if (ticket.getSeance() != null) {
+                ticket.getSeance().getFilm(); // Charger le film
+                ticket.getSeance().getSalle(); // Charger la salle
+            }
+            ticket.getPlace(); // Charger la place
+            ticket.getCategoriePersonne(); // Charger la catégorie
+            ticket.getStatut(); // Charger le statut
+            if (ticket.getReservation() != null) {
+                ticket.getReservation().getPersonne(); // Charger la personne
+            }
+        });
+        model.addAttribute("tickets", tickets);
+        return "admin/tickets/liste";
     }
 }

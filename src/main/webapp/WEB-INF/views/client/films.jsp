@@ -1,53 +1,140 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Films Disponibles</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 15px; margin-bottom: 20px; text-align: center; }
-        .films-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .film-card { background: white; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); overflow: hidden; transition: transform 0.3s; }
-        .film-card:hover { transform: translateY(-5px); }
-        .film-image { height: 200px; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 48px; }
-        .film-content { padding: 20px; }
-        .film-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #333; }
-        .film-description { color: #666; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-        .film-details { display: flex; justify-content: space-between; font-size: 14px; color: #888; }
-        .film-details span { display: flex; align-items: center; gap: 5px; }
-        .back-btn { display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; }
-        .back-btn:hover { background: #5a67d8; }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/common.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/client.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/films.css">
 </head>
 <body>
 <div class="container">
-    <a href="${pageContext.request.contextPath}/client/accueil" class="back-btn">
+    <a href="${pageContext.request.contextPath}/client/accueil" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Retour à l'accueil
     </a>
     
-    <div class="header">
-        <h1><i class="fas fa-film"></i> Films Disponibles</h1>
-        <p>Découvrez notre sélection de films</p>
+    <div class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title"><i class="fas fa-film"></i> Films Disponibles</h1>
+            <p class="hero-subtitle">Découvrez notre sélection de films</p>
+        </div>
     </div>
 
-    <div class="films-grid">
+    <!-- Filtres multicritères -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="margin-top: 0; color: var(--secondary-color); margin-bottom: 1.5rem;"><i class="fas fa-filter"></i> Filtres de recherche</h3>
+        
+        <div class="filter-row">
+            <div class="filter-col">
+                <label class="form-label"><i class="fas fa-search"></i> Recherche</label>
+                <input type="text" id="searchInput" class="form-control" 
+                       placeholder="Rechercher par titre..." onkeyup="filterFilms()">
+            </div>
+            
+            <div class="filter-col">
+                <label class="form-label"><i class="fas fa-language"></i> Langue</label>
+                <select id="langueFilter" class="form-control" onchange="filterFilms()">
+                    <option value="">Toutes les langues</option>
+                </select>
+            </div>
+            
+            <div class="filter-col">
+                <label class="form-label"><i class="fas fa-clock"></i> Durée</label>
+                <select id="dureeFilter" class="form-control" onchange="filterFilms()">
+                    <option value="">Toutes les durées</option>
+                    <option value="court">Court (< 90 min)</option>
+                    <option value="moyen">Moyen (90-120 min)</option>
+                    <option value="long">Long (> 120 min)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="filter-row">
+            <div class="filter-col">
+                <label class="form-label"><i class="fas fa-language"></i> Langue</label>
+                <select id="langueFilter" class="form-control" onchange="filterFilms()">
+                    <option value="">Toutes les langues</option>
+                </select>
+            </div>
+            
+            <div class="filter-col">
+                <label class="form-label"><i class="fas fa-clock"></i> Durée</label>
+                <select id="dureeFilter" class="form-control" onchange="filterFilms()">
+                    <option value="">Toutes les durées</option>
+                    <option value="court">Court (< 90 min)</option>
+                    <option value="moyen">Moyen (90-120 min)</option>
+                    <option value="long">Long (> 120 min)</option>
+                </select>
+            </div>
+            
+            <div class="filter-col">
+                <label class="form-label"><i class="fas fa-calendar"></i> Année</label>
+                <select id="anneeFilter" class="form-control" onchange="filterFilms()">
+                    <option value="">Toutes les années</option>
+                </select>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem; align-items: center;">
+            <button class="btn btn-primary" onclick="filterFilms()">
+                <i class="fas fa-search"></i> Appliquer les filtres
+            </button>
+            <button class="btn btn-secondary" onclick="resetFilters()">
+                <i class="fas fa-redo"></i> Réinitialiser
+            </button>
+            <span id="resultsCount" style="color: var(--text-secondary); margin-left: auto;"></span>
+        </div>
+    </div>
+
+    <div class="films-grid" id="filmsGrid">
         <c:forEach var="film" items="${films}">
-            <div class="film-card">
-                <div class="film-image">
+            <div class="film-card" 
+                 data-langue="${film.langueOriginale}"
+                 data-duree="${film.dureeMinutes != null ? film.dureeMinutes : 0}"
+                 data-annee="${film.dateSortie != null ? film.dateSortie.year : 0}">
+                <div class="film-poster">
                     <i class="fas fa-film"></i>
                 </div>
-                <div class="film-content">
+                <div class="film-info">
                     <div class="film-title">${film.titre}</div>
-                    <div class="film-description">${film.description}</div>
-                    <div class="film-details">
-                        <span><i class="fas fa-clock"></i> ${film.dureeMinutes} min</span>
-                       <span><i class="fas fa-language"></i> ${film.langueOriginale}</span>
+                    <p class="film-description">
+                        <c:choose>
+                            <c:when test="${not empty film.description}">
+                                ${film.description}
+                            </c:when>
+                            <c:otherwise>
+                                Aucune description disponible.
+                            </c:otherwise>
+                        </c:choose>
+                    </p>
+                    <div class="film-meta">
+                        <span><i class="fas fa-clock"></i> 
+                            <c:choose>
+                                <c:when test="${film.dureeMinutes != null}">
+                                    ${film.dureeMinutes} min
+                                </c:when>
+                                <c:otherwise>
+                                    Durée inconnue
+                                </c:otherwise>
+                            </c:choose>
+                        </span>
+                        <span><i class="fas fa-language"></i> 
+                            <c:choose>
+                                <c:when test="${not empty film.langueOriginale}">
+                                    ${film.langueOriginale}
+                                </c:when>
+                                <c:otherwise>
+                                    Langue inconnue
+                                </c:otherwise>
+                            </c:choose>
+                        </span>
+                        <c:if test="${film.dateSortie != null}">
+                            <span><i class="fas fa-calendar"></i> ${film.dateSortie.year}</span>
+                        </c:if>
                     </div>
                 </div>
             </div>
@@ -61,5 +148,114 @@
         </div>
     </c:if>
 </div>
+
+<script>
+let allFilms = [];
+let uniqueLangues = new Set();
+let uniqueAnnees = new Set();
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Récupérer tous les films
+    const filmCards = document.querySelectorAll('.film-card');
+    allFilms = Array.from(filmCards).map(card => ({
+        element: card,
+        titre: card.querySelector('.film-title').textContent.toLowerCase(),
+        description: card.querySelector('.film-description').textContent.toLowerCase(),
+        duree: parseInt(card.dataset.duree) || 0,
+        langue: card.dataset.langue ? card.dataset.langue.toLowerCase() : '',
+        annee: parseInt(card.dataset.annee) || 0
+    }));
+    
+    // Récupérer les valeurs uniques pour les filtres
+    allFilms.forEach(film => {
+        if (film.langue) uniqueLangues.add(film.langue);
+        if (film.annee > 0) uniqueAnnees.add(film.annee);
+    });
+    
+    // Remplir les filtres dynamiques
+    populateFilter('langueFilter', uniqueLangues);
+    populateFilter('anneeFilter', uniqueAnnees);
+    
+    updateResultsCount(allFilms.length);
+});
+
+function populateFilter(filterId, values) {
+    const select = document.getElementById(filterId);
+    const sortedValues = Array.from(values).sort();
+    
+    sortedValues.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value.charAt(0).toUpperCase() + value.slice(1);
+        select.appendChild(option);
+    });
+}
+
+function filterFilms() {
+    const searchText = document.getElementById('searchInput').value.toLowerCase();
+    const langueFilter = document.getElementById('langueFilter').value;
+    const dureeFilter = document.getElementById('dureeFilter').value;
+    const anneeFilter = document.getElementById('anneeFilter').value;
+    
+    const filteredFilms = allFilms.filter(film => {
+        // Filtre texte (titre, description)
+        if (searchText && 
+            !film.titre.includes(searchText) && 
+            !film.description.includes(searchText)) {
+            return false;
+        }
+        
+        // Filtre langue
+        if (langueFilter && film.langue !== langueFilter) {
+            return false;
+        }
+        
+        // Filtre durée
+        if (dureeFilter) {
+            switch(dureeFilter) {
+                case 'court':
+                    if (film.duree >= 90) return false;
+                    break;
+                case 'moyen':
+                    if (film.duree < 90 || film.duree > 120) return false;
+                    break;
+                case 'long':
+                    if (film.duree <= 120) return false;
+                    break;
+            }
+        }
+        
+        // Filtre année
+        if (anneeFilter && film.annee !== parseInt(anneeFilter)) {
+            return false;
+        }
+        
+        return true;
+    });
+    
+    // Afficher/masquer les films
+    allFilms.forEach(film => {
+        film.element.style.display = filteredFilms.includes(film) ? 'block' : 'none';
+    });
+    
+    updateResultsCount(filteredFilms.length);
+}
+
+function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('langueFilter').value = '';
+    document.getElementById('dureeFilter').value = '';
+    document.getElementById('anneeFilter').value = '';
+    
+    filterFilms(); // Réappliquer les filtres (tous vides = tout afficher)
+}
+
+function updateResultsCount(count) {
+    const resultsCount = document.getElementById('resultsCount');
+    if (resultsCount) {
+        resultsCount.textContent = `${count} film(s) trouvé(s)`;
+    }
+}
+</script>
 </body>
 </html>

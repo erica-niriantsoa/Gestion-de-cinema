@@ -67,9 +67,18 @@ public class ReservationController {
             
             List<CategoriePersonne> categories = categoriePersonneService.findAll();
             
+            // Debug: vérifier les catégories chargées
+            System.out.println("DEBUG: Categories loaded: " + categories.size());
+            for (CategoriePersonne cat : categories) {
+                System.out.println("DEBUG: Category - ID: " + cat.getId() + ", Libelle: " + cat.getLibelle());
+            }
+            
             // Convertir en JSON pour le JS
             ObjectMapper mapper = new ObjectMapper();
             String categoriesJson = mapper.writeValueAsString(categories);
+            
+            // Debug: vérifier le JSON généré
+            System.out.println("DEBUG: Categories JSON: " + categoriesJson);
             
             model.addAttribute("seance", seance);
             model.addAttribute("places", places);

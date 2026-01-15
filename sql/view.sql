@@ -130,3 +130,31 @@ AND NOT EXISTS (
     AND t.id_place = p.id
     AND t.id_statut IN (SELECT id FROM statuts_ticket_actifs)
 );
+
+-- Vue pour calculer le revenu maximal par séance (basé sur tarif_defaut)
+DROP VIEW IF EXISTS revenu_maximal_seance;
+CREATE VIEW revenu_maximal_seance AS
+SELECT 
+    s.id as seance_id,
+    f.titre as film_titre,
+    s.debut as seance_debut,
+    s.fin as seance_fin,
+    sal.nom as salle_nom,
+    sal.id as salle_id,
+    sal.capacite,
+    -- Nombre de places par type
+    COUNT(DISTINCT p.id) as nb_places_total,
+    COUNT(DISTINCT CASE WHEN p.id_type_place = 1 THEN p.id END) as nb_places_standard,
+    COUNT(DISTINCT CASE WHEN p.id_type_place = 2 THEN p.id END) as nb_places_premium,
+    -- Revenu maximal : somme des prix maximums selon le type de place
+    COALESCE(SUM(
+        (SELECT MAX(td.prix) 
+         FROM tarif_defaut td 
+         WHERE td.id_type_place = p.id_type_place)
+    ), 0) as revenu_maximal
+FROM seance s
+JOIN film f ON s.id_film = f.id
+JOIN salle sal ON s.id_salle = sal.id
+JOIN place p ON p.id_salle = sal.id
+GROUP BY s.id, f.titre, s.debut, s.fin, sal.nom, sal.id, sal.capacite
+ORDER BY s.debut DESC;

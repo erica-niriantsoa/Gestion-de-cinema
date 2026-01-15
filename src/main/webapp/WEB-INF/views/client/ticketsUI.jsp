@@ -1,36 +1,44 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
     <title>Tickets UI</title>
-    <style>
-        body{font-family:Segoe UI,Arial;background:#f6f8fb;padding:20px}
-        table{width:100%;border-collapse:collapse;background:#fff}
-        th,td{padding:10px;border:1px solid #e6e9ef;text-align:left}
-        th{background:#f0f4f8}
-        .badge{display:inline-block;padding:4px 8px;border-radius:6px;font-size:12px}
-        .payee{background:#d4edda;color:#155724}
-        .reserve{background:#fff3cd;color:#856404}
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/common.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/client.css">
 </head>
 <body>
-    <h1>Liste des Tickets (UI dynamique)</h1>
-    <div id="loader">Chargement...</div>
-    <table id="ticketsTable" style="display:none">
-        <thead>
-            <tr>
-                <th>Film</th>
-                <th>Séance</th>
-                <th>Place</th>
-                <th>Catégorie</th>
-                <th>Prix</th>
-                <th>Statut</th>
-            </tr>
-        </thead>
-        <tbody id="ticketsBody"></tbody>
-    </table>
+    <div class="container">
+        <div class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title"><i class="fas fa-ticket-alt"></i> Tickets UI</h1>
+                <p class="hero-subtitle">Liste dynamique des tickets</p>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div id="loader" class="alert alert-info">
+                <i class="fas fa-spinner fa-spin"></i> Chargement...
+            </div>
+            <div class="table-wrapper" style="display:none" id="tableContainer">
+                <table class="table" id="ticketsTable">
+                    <thead>
+                        <tr>
+                            <th>Film</th>
+                            <th>Séance</th>
+                            <th>Place</th>
+                            <th>Catégorie</th>
+                            <th>Prix</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticketsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <script>
         async function loadTickets(){
@@ -51,9 +59,13 @@
                 tbody.appendChild(tr);
             });
             document.getElementById('loader').style.display='none';
-            document.getElementById('ticketsTable').style.display='table';
+            document.getElementById('tableContainer').style.display='block';
         }
-        loadTickets().catch(e=>{document.getElementById('loader').innerText='Erreur: '+e.message});
+        loadTickets().catch(e=>{
+            const loader = document.getElementById('loader');
+            loader.className = 'alert alert-danger';
+            loader.innerHTML = '<i class="fas fa-exclamation-circle"></i> Erreur: '+e.message;
+        });
     </script>
 </body>
 </html>

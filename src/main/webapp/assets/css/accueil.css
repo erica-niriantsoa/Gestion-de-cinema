@@ -1,0 +1,55 @@
+/* Styles spécifiques à la page d'accueil client */
+.filter-row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.filter-col {
+    flex: 1;
+    min-width: 200px;
+}
+
+.quick-actions {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.filter-section {
+    margin-bottom: 2rem;
+}
+
+.filter-title {
+    margin-top: 0;
+    color: var(--secondary-color);
+    margin-bottom: 1.5rem;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    align-items: center;
+}
+
+.results-count {
+    color: var(--text-secondary);
+    margin-left: auto;
+}
+
+.no-results {
+    text-align: center;
+    padding: 40px;
+}
+
+.btn-reserver {
+    margin-top: 20px;
+}
+
+.film-not-found {
+    color: gray;
+}
+
+.salle-not-found {
+    color: gray;
+}

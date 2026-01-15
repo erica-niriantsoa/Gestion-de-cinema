@@ -1,68 +1,31 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>${pageTitle}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 15px; margin-bottom: 20px; }
-        .seance-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
-        .info-item { background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 8px; }
-        .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
-        @media (max-width: 968px) { .main-grid { grid-template-columns: 1fr; } }
-        
-        /* Plan de salle */
-        .plan-container { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
-        .screen { text-align: center; background: linear-gradient(to bottom, #333, #666); color: white; padding: 15px; margin: 0 0 30px; border-radius: 5px; font-weight: bold; letter-spacing: 2px; }
-        .places-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; max-height: 400px; overflow-y: auto; }
-        .place-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px; }
-        .place-checkbox { margin: 0; }
-        .place-label { flex: 1; font-weight: bold; }
-        .place-type { font-size: 12px; color: #666; }
-        
-        /* Panier et Formulaire */
-        .sidebar { display: flex; flex-direction: column; gap: 20px; }
-        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
-        .card-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f8f9fa; }
-        .selected-places { max-height: 200px; overflow-y: auto; margin-bottom: 15px; }
-        .place-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 6px; margin-bottom: 8px; }
-        .remove-btn { background: #dc3545; color: white; border: none; width: 25px; height: 25px; border-radius: 50%; cursor: pointer; font-size: 12px; }
-        .form-group { margin-bottom: 15px; }
-        .form-label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
-        .form-input, .form-select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        .form-input:focus, .form-select:focus { outline: none; border-color: #667eea; }
-        .total { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; margin: 15px 0; }
-        .total-amount { font-size: 32px; font-weight: bold; color: #333; margin: 10px 0; }
-        .btn-confirm { width: 100%; padding: 15px; background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
-        .btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3); }
-        .btn-confirm:disabled { background: #6c757d; cursor: not-allowed; transform: none; }
-        .legend { display: flex; gap: 15px; justify-content: center; margin-top: 20px; flex-wrap: wrap; font-size: 14px; }
-        .legend-item { display: flex; align-items: center; gap: 5px; }
-        .legend-color { width: 20px; height: 20px; border-radius: 3px; }
-        .message { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
-        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/common.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/client.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/reservation.css">
 </head>
 <body>
 <div class="container">
-    <div class="header">
-        <h1><i class="fas fa-ticket-alt"></i> Réservation</h1>
-        <h2>${seance.film.titre}</h2>
-        <div class="seance-info">
-            <div class="info-item"><i class="fas fa-calendar"></i> <strong>Date:</strong> ${seance.debutFormatted}</div>
-            <div class="info-item"><i class="fas fa-language"></i> <strong>Langue:</strong> ${seance.langue}</div>
-            <div class="info-item"><i class="fas fa-door-open"></i> <strong>Salle:</strong> ${seance.salle.nom}</div>
-            <div class="info-item"><i class="fas fa-clock"></i> <strong>Durée:</strong> ${seance.film.dureeMinutes} min</div>
+    <div class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title"><i class="fas fa-ticket-alt"></i> Réservation</h1>
+            <h2 style="color: var(--accent-color); margin-top: 1rem;">${seance.film.titre}</h2>
+            <div class="seance-details" style="justify-content: center; margin-top: 1rem;">
+                <div class="seance-detail"><i class="fas fa-calendar"></i> ${seance.debutFormatted}</div>
+                <div class="seance-detail"><i class="fas fa-language"></i> ${seance.langue}</div>
+                <div class="seance-detail"><i class="fas fa-door-open"></i> ${seance.salle.nom}</div>
+                <div class="seance-detail"><i class="fas fa-clock"></i> ${seance.film.dureeMinutes} min</div>
+            </div>
         </div>
     </div>
 
-    <div id="message" class="message"></div>
+    <div id="message" class="alert"></div>
 
     <div class="main-grid">
         <!-- Plan de salle -->
@@ -99,7 +62,7 @@
                 </div>
                 <div class="total">
                     <div>Total à payer</div>
-                    <div class="total-amount" id="totalAmount">0.00 €</div>
+                    <div class="total-amount" id="totalAmount">0 AR</div>
                 </div>
             </div>
 
@@ -109,21 +72,21 @@
                 <form id="clientForm">
                     <div class="form-group">
                         <label class="form-label">Nom complet *</label>
-                        <input type="text" id="nomComplet" class="form-input" placeholder="Votre nom complet" required>
+                        <input type="text" id="nomComplet" class="form-control" placeholder="Votre nom complet" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Email *</label>
-                        <input type="email" id="email" class="form-input" placeholder="votre@email.com" required>
+                        <input type="email" id="email" class="form-control" placeholder="votre@email.com" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Téléphone</label>
-                        <input type="tel" id="telephone" class="form-input" placeholder="0612345678">
+                        <input type="tel" id="telephone" class="form-control" placeholder="0612345678">
                     </div>
                 </form>
             </div>
 
             <!-- Bouton de confirmation -->
-            <button class="btn-confirm" id="confirmBtn" disabled onclick="confirmReservation()">
+            <button class="btn btn-success btn-lg" id="confirmBtn" disabled onclick="confirmReservation()">
                 <i class="fas fa-check-circle"></i> Confirmer la réservation
             </button>
         </div>
@@ -134,8 +97,11 @@
 let selectedPlaces = new Map();
 const categories = JSON.parse('${categoriesJson}'); // Depuis le serveur
 
+console.log('Categories loaded:', categories); // Debug
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initial setup if needed
+    console.log('Page loaded, categories:', categories); // Debug
 });
 
 function togglePlace(checkbox) {
@@ -165,7 +131,7 @@ function updateDisplay() {
     
     if (selectedPlaces.size === 0) {
         container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;"><i class="fas fa-chair" style="font-size: 30px; margin-bottom: 10px;"></i><p>Aucune place sélectionnée</p></div>';
-        document.getElementById('totalAmount').textContent = '0.00 €';
+        document.getElementById('totalAmount').textContent = '0 AR';
         return;
     }
     
@@ -180,6 +146,7 @@ function updateDisplay() {
         
         // Générer les options de catégories manuellement
         let optionsHtml = '';
+        console.log('Generating options for place:', placeId, 'categories:', categories); // Debug
         for (let i = 0; i < categories.length; i++) {
             const cat = categories[i];
             const selected = cat.id == place.categorieId ? 'selected' : '';
@@ -194,22 +161,23 @@ function updateDisplay() {
                 optionsHtml +
                 '</select>' +
                 '</div>' +
-                '<div style="font-weight: bold; color: #28a745;">' + prix.toFixed(2) + ' €</div>' +
-                '<button class="remove-btn" onclick="removePlace(\'' + placeId + '\')"><i class="fas fa-times"></i></button>' +
+                '<div style="font-weight: bold; color: #28a745;">' + prix.toLocaleString('fr-FR') + ' AR</div>' +
+                '<button class="remove-btn" onclick="removePlace(\'' + placeId + '\')><i class="fas fa-times"></i></button>' +
                 '</div>';
     }
     
     container.innerHTML = html;
-    document.getElementById('totalAmount').textContent = total.toFixed(2) + ' €';
+    document.getElementById('totalAmount').textContent = total.toLocaleString('fr-FR') + ' AR';
 }
 
 function calculerPrix(place) {
-    let prix = 9.90;
-    if (place.type === 'VIP') prix = 14.90;
-    else if (place.type === 'PMR') prix = 8.90;
+    // Prix basés sur tarif_defaut
+    // STANDARD = 20000 AR, PREMIUM = 50000 AR (même prix pour toutes catégories)
+    let prix = 20000; // STANDARD par défaut
     
-    if (place.categorieId === 2) prix *= 0.7; // ENFANT -30%
-    else if (place.categorieId === 3) prix *= 0.8; // SENIOR -20%
+    if (place.type === 'PREMIUM') {
+        prix = 50000;
+    }
     
     return prix;
 }
@@ -281,7 +249,7 @@ function confirmReservation() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showMessage(`Réservation confirmée ! ID: ${data.reservationId} - Total: ${data.total} €`, 'success');
+            showMessage(`Réservation confirmée ! ID: ${data.reservationId} - Total: ${data.total} AR`, 'success');
             setTimeout(() => {
                 window.location.href = '${pageContext.request.contextPath}/client/accueil';
             }, 2000);
