@@ -67,6 +67,10 @@ AND NOT EXISTS (
     AND t.id_statut IN (SELECT id FROM statuts_ticket_actifs)
 );
 
+CREATE OR REPLACE VIEW statuts_ticket_actifs AS
+SELECT id FROM statut_ticket 
+WHERE code IN ('RESERVE', 'PAYE', 'UTILISE');
+
 -- Vue pour calculer le revenu maximal par séance (basé sur tarif_defaut)
 DROP VIEW IF EXISTS revenu_maximal_seance;
 CREATE VIEW revenu_maximal_seance AS
@@ -96,9 +100,3 @@ GROUP BY s.id, f.titre, s.debut, s.fin, sal.nom, sal.id, sal.capacite
 ORDER BY s.debut DESC;
 
 
-UPDATE tarif_defaut SET prix = 
-    CASE 
-        WHEN id_type_place = 1 THEN 1000  -- STANDARD: 10€
-        WHEN id_type_place = 2 THEN 1500  -- PREMIUM: 15€
-        WHEN id_type_place = 3 THEN 2000  -- VIP: 20€
-    END;
