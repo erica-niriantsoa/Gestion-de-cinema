@@ -6,48 +6,11 @@
     <meta charset="UTF-8">
     <title>${pageTitle}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 15px; margin-bottom: 20px; }
-        .seance-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
-        .info-item { background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 8px; }
-        .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
-        @media (max-width: 968px) { .main-grid { grid-template-columns: 1fr; } }
-        
-        /* Plan de salle */
-        .plan-container { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
-        .screen { text-align: center; background: linear-gradient(to bottom, #333, #666); color: white; padding: 15px; margin: 0 0 30px; border-radius: 5px; font-weight: bold; letter-spacing: 2px; }
-        .places-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; max-height: 400px; overflow-y: auto; }
-        .place-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #f8f9fa; border-radius: 6px; }
-        .place-checkbox { margin: 0; }
-        .place-label { flex: 1; font-weight: bold; }
-        .place-type { font-size: 12px; color: #666; }
-        
-        /* Panier et Formulaire */
-        .sidebar { display: flex; flex-direction: column; gap: 20px; }
-        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
-        .card-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f8f9fa; }
-        .selected-places { max-height: 200px; overflow-y: auto; margin-bottom: 15px; }
-        .place-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 6px; margin-bottom: 8px; }
-        .remove-btn { background: #dc3545; color: white; border: none; width: 25px; height: 25px; border-radius: 50%; cursor: pointer; font-size: 12px; }
-        .form-group { margin-bottom: 15px; }
-        .form-label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
-        .form-input, .form-select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        .form-input:focus, .form-select:focus { outline: none; border-color: #667eea; }
-        .total { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; margin: 15px 0; }
-        .total-amount { font-size: 32px; font-weight: bold; color: #333; margin: 10px 0; }
-        .btn-confirm { width: 100%; padding: 15px; background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
-        .btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3); }
-        .btn-confirm:disabled { background: #6c757d; cursor: not-allowed; transform: none; }
-        .legend { display: flex; gap: 15px; justify-content: center; margin-top: 20px; flex-wrap: wrap; font-size: 14px; }
-        .legend-item { display: flex; align-items: center; gap: 5px; }
-        .legend-color { width: 20px; height: 20px; border-radius: 3px; }
-        .message { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
-        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-    </style>
+     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/common.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/client.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/reservation.css">
+
+
 </head>
 <body>
 <div class="container">
@@ -156,6 +119,7 @@ function togglePlace(checkbox) {
     updateDisplay();
 }
 function updateDisplay() {
+
     const container = document.getElementById('selectedPlaces');
     const count = document.getElementById('selectedCount');
     const confirmBtn = document.getElementById('confirmBtn');
@@ -203,16 +167,30 @@ function updateDisplay() {
     document.getElementById('totalAmount').textContent = total.toFixed(2) + ' €';
 }
 
+const tarifs = JSON.parse('${tarifsJson}');
 function calculerPrix(place) {
-    let prix = 9.90;
-    if (place.type === 'VIP') prix = 14.90;
-    else if (place.type === 'PMR') prix = 8.90;
-    
-    if (place.categorieId === 2) prix *= 0.7; // ENFANT -30%
-    else if (place.categorieId === 3) prix *= 0.8; // SENIOR -20%
-    
-    return prix;
+    const typeId = parseInt(place.typeId);
+    console.log('Type ID:', typeId);
+    const categorieId = parseInt(place.categorieId);
+    console.log('Categorie ID:', categorieId);
+    // Chercher dans la liste des tarifs
+    const tarif = tarifs.find(t =>
+        t.typePlace.id === typeId &&
+        t.categoriePersonne.id === categorieId
+    );
+    console.log('Tarif trouvé:', tarif);
+    tarifs.forEach(element => {
+        console.log('Tarif élément:', element);
+    });
+
+    if (tarif) {
+        return tarif.prix;
+    } else {
+        console.warn(`Aucun tarif trouvé pour typePlace=${typeId}, categorie=${categorieId}`);
+        return 0; // ou un prix par défaut
+    }
 }
+
 
 function updateCategorie(placeId, categorieId) {
     const place = selectedPlaces.get(placeId);
@@ -247,12 +225,10 @@ function confirmReservation() {
     const nomComplet = document.getElementById('nomComplet').value.trim();
     const email = document.getElementById('email').value.trim();
     const telephone = document.getElementById('telephone').value.trim();
-    
     if (!nomComplet) {
         showMessage('Veuillez saisir votre nom complet', 'error');
         return;
     }
-    
     if (!email) {
         showMessage('Veuillez saisir votre email', 'error');
         return;
@@ -271,7 +247,6 @@ function confirmReservation() {
         email: email,
         telephone: telephone
     };
-    
     // Envoyer au serveur
     fetch('${pageContext.request.contextPath}/client/reservation/confirmer', {
         method: 'POST',

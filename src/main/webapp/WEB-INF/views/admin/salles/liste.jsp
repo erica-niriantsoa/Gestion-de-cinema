@@ -1,35 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Gestion des Salles</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header { background: white; padding: 25px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
-        h1 { color: #333; }
-        .btn { padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: all 0.3s; display: inline-block; border: none; cursor: pointer; }
-        .btn-primary { background: #3498db; color: white; }
-        .btn-primary:hover { background: #2980b9; }
-        .btn-danger { background: #e74c3c; color: white; font-size: 14px; padding: 8px 15px; }
-        .btn-danger:hover { background: #c0392b; }
-        .btn-warning { background: #f39c12; color: white; font-size: 14px; padding: 8px 15px; }
-        .btn-warning:hover { background: #e67e22; }
-        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        table { width: 100%; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #3498db; color: white; font-weight: bold; }
-        tr:hover { background: #f8f9fa; }
-        .actions { display: flex; gap: 10px; }
-        .back-link { display: inline-block; color: #3498db; text-decoration: none; margin-bottom: 20px; font-weight: bold; }
-        .back-link:hover { text-decoration: underline; }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/common.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin.css">
 </head>
 <body>
     <div class="container">
@@ -38,10 +16,15 @@
         </a>
         
         <div class="header">
-            <h1><i class="fas fa-door-open"></i> Gestion des Salles</h1>
-            <a href="${pageContext.request.contextPath}/admin/salles/nouveau" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Nouvelle Salle
-            </a>
+            <div class="header-content">
+                <div class="header-title">
+                    <i class="fas fa-door-open"></i>
+                    <h1>Gestion des Salles</h1>
+                </div>
+                <a href="${pageContext.request.contextPath}/admin/salles/nouveau" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nouvelle Salle
+                </a>
+            </div>
         </div>
         
         <c:if test="${not empty success}">
@@ -56,6 +39,42 @@
             </div>
         </c:if>
         
+        <div class="quick-actions">
+            <a href="${pageContext.request.contextPath}/admin/sallesDetail" class="btn btn-primary">
+                <i class="fas fa-film"></i> Voir detail Salles
+            </a>
+        </div>
+        <!-- Filtres multicritères -->
+        <div class="card filter-section">
+            <h3 class="filter-title"><i class="fas fa-filter"></i> Filtres de recherche</h3>
+            
+            <div class="filter-row">
+                <div class="filter-col">
+                    <label class="form-label"><i class="fas fa-search"></i> Recherche</label>
+                    <input type="text" id="searchInput" class="form-control" 
+                           placeholder="Rechercher par nom..." onkeyup="filterSalles()">
+                </div>
+                
+                <div class="filter-col">
+                    <label class="form-label"><i class="fas fa-users"></i> Capacité</label>
+                    <select id="capaciteFilter" class="form-control" onchange="filterSalles()">
+                        <option value="">Toutes les capacités</option>
+                        <option value="petite">Petite (< 100 places)</option>
+                        <option value="moyenne">Moyenne (100-200 places)</option>
+                        <option value="grande">Grande (> 200 places)</option>
+                    </select>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="button" class="btn btn-secondary" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> Effacer les filtres
+                    </button>
+                    <span id="resultsCount" class="results-count"></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-wrapper">
         <table>
             <thead>
                 <tr>
@@ -87,6 +106,54 @@
                 </c:forEach>
             </tbody>
         </table>
+        </div>
     </div>
+
+    <script>
+    function filterSalles() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const capaciteFilter = document.getElementById('capaciteFilter').value;
+        
+        const rows = document.querySelectorAll('tbody tr');
+        let visibleCount = 0;
+        
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const nom = cells[1].textContent.toLowerCase();
+            const capaciteText = cells[2].textContent;
+            const capacite = parseInt(capaciteText.replace(' places', ''));
+            
+            // Filtre de recherche
+            const matchesSearch = nom.includes(searchTerm);
+            
+            // Filtre de capacité
+            let matchesCapacite = true;
+            if (capaciteFilter) {
+                if (capaciteFilter === 'petite') matchesCapacite = capacite < 100;
+                else if (capaciteFilter === 'moyenne') matchesCapacite = capacite >= 100 && capacite <= 200;
+                else if (capaciteFilter === 'grande') matchesCapacite = capacite > 200;
+            }
+            
+            const isVisible = matchesSearch && matchesCapacite;
+            row.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount++;
+        });
+        
+        // Mettre à jour le compteur
+        const resultsCount = document.getElementById('resultsCount');
+        resultsCount.textContent = visibleCount + ' salle(s) trouvée(s)';
+    }
+    
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('capaciteFilter').value = '';
+        filterSalles();
+    }
+    
+    // Initialiser le compteur au chargement
+    document.addEventListener('DOMContentLoaded', function() {
+        filterSalles();
+    });
+    </script>
 </body>
 </html>

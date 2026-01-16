@@ -5,7 +5,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Liste des Réservations</title>
+    <title>Liste des Tickets</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/common.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin.css">
@@ -20,8 +20,8 @@
     <div class="header">
         <div class="header-content">
             <div class="header-title">
-                <i class="fas fa-ticket-alt"></i>
-                <h1>Gestion des Réservations</h1>
+                <i class="fas fa-tags"></i>
+                <h1>Gestion des Tickets</h1>
             </div>
         </div>
     </div>
@@ -34,19 +34,19 @@
             <div class="filter-col">
                 <label class="form-label"><i class="fas fa-search"></i> Recherche</label>
                 <input type="text" id="searchInput" class="form-control"
-                       placeholder="Client, email, film..." onkeyup="filterReservations()">
+                       placeholder="Film, place, client..." onkeyup="filterTickets()">
             </div>
 
             <div class="filter-col">
                 <label class="form-label"><i class="fas fa-film"></i> Film</label>
-                <select id="filmFilter" class="form-control" onchange="filterReservations()">
+                <select id="filmFilter" class="form-control" onchange="filterTickets()">
                     <option value="">Tous les films</option>
                 </select>
             </div>
 
             <div class="filter-col">
                 <label class="form-label"><i class="fas fa-tag"></i> Statut</label>
-                <select id="statutFilter" class="form-control" onchange="filterReservations()">
+                <select id="statutFilter" class="form-control" onchange="filterTickets()">
                     <option value="">Tous les statuts</option>
                     <option value="PAYE">Payé</option>
                     <option value="EN_ATTENTE">En attente</option>
@@ -57,14 +57,14 @@
 
         <div class="filter-row">
             <div class="filter-col">
-                <label class="form-label"><i class="fas fa-calendar"></i> Date de réservation</label>
-                <input type="date" id="dateFilter" class="form-control" onchange="filterReservations()">
+                <label class="form-label"><i class="fas fa-calendar"></i> Date de séance</label>
+                <input type="date" id="dateFilter" class="form-control" onchange="filterTickets()">
             </div>
 
             <div class="filter-col">
-                <label class="form-label"><i class="fas fa-door-open"></i> Salle</label>
-                <select id="salleFilter" class="form-control" onchange="filterReservations()">
-                    <option value="">Toutes les salles</option>
+                <label class="form-label"><i class="fas fa-user"></i> Catégorie</label>
+                <select id="categorieFilter" class="form-control" onchange="filterTickets()">
+                    <option value="">Toutes les catégories</option>
                 </select>
             </div>
 
@@ -77,38 +77,45 @@
         </div>
     </div>
 
-    <!-- Réservations -->
+    <!-- Tous les Tickets -->
     <div class="card">
-        <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--secondary-color);"><i class="fas fa-ticket-alt"></i> Toutes les Réservations</h2>
+        <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--secondary-color);"><i class="fas fa-tags"></i> Tous les Tickets</h2>
         <div class="table-wrapper">
         <table>
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Date Réservation</th>
-                    <th>Montant Total</th>
-                    <th>Client</th>
-                    <th>Email</th>
                     <th>Film</th>
                     <th>Séance</th>
                     <th>Salle</th>
+                    <th>Place</th>
+                    <th>Catégorie</th>
+                    <th>Prix</th>
                     <th>Statut</th>
-                    <th>Nb Tickets</th>
+                    <th>Client</th>
                 </tr>
             </thead>
             <tbody>
-                <c:forEach var="res" items="${reservations}">
+                <c:forEach var="ticket" items="${tickets}">
                     <tr>
-                        <td>${res.reservationId}</td>
-                        <td><c:if test="${res.dateReservation != null}">${res.dateReservationFormatted}</c:if></td>
-                        <td>${res.montantTotal} AR</td>
-                        <td>${res.clientNom}</td>
-                        <td>${res.clientEmail}</td>
-                        <td>${res.filmTitre}</td>
-                        <td><c:if test="${res.seanceDebut != null}">${res.seanceDebutFormatted}</c:if></td>
-                        <td>${res.salleNom}</td>
-                        <td><span class="status ${res.statutReservation == 'PAYE' ? 'payé' : 'en_attente'}">${res.statutReservation}</span></td>
-                        <td>${res.nbTickets}</td>
+                        <td>${ticket.id}</td>
+                        <td>${ticket.seance.film.titre}</td>
+                        <td>${ticket.seance.debutFormatted}</td>
+                        <td>${ticket.seance.salle.nom}</td>
+                        <td>${ticket.place.codePlace}</td>
+                        <td>${ticket.categoriePersonne.libelle}</td>
+                        <td>${ticket.prix} AR</td>
+                        <td><span class="status ${ticket.statut.code == 'PAYE' ? 'payé' : 'en_attente'}">${ticket.statut.libelle}</span></td>
+                        <td>
+                            <c:choose>
+                                <c:when test="${ticket.reservation != null && ticket.reservation.personne != null}">
+                                    ${ticket.reservation.personne.nomComplet} (${ticket.reservation.personne.email})
+                                </c:when>
+                                <c:otherwise>
+                                    <em>Non réservé</em>
+                                </c:otherwise>
+                            </c:choose>
+                        </td>
                     </tr>
                 </c:forEach>
             </tbody>
@@ -118,31 +125,30 @@
 </div>
 
 <script>
-function filterReservations() {
+function filterTickets() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const filmFilter = document.getElementById('filmFilter').value;
     const statutFilter = document.getElementById('statutFilter').value;
     const dateFilter = document.getElementById('dateFilter').value;
-    const salleFilter = document.getElementById('salleFilter').value;
+    const categorieFilter = document.getElementById('categorieFilter').value;
 
     const rows = document.querySelectorAll('tbody tr');
     let visibleCount = 0;
 
     rows.forEach(row => {
         const cells = row.querySelectorAll('td');
-        const id = cells[0].textContent;
-        const dateReservation = cells[1].textContent.toLowerCase();
-        const client = cells[3].textContent.toLowerCase();
-        const email = cells[4].textContent.toLowerCase();
-        const film = cells[5].textContent.toLowerCase();
-        const salle = cells[7].textContent.toLowerCase();
-        const statut = cells[8].textContent.toLowerCase();
+        const film = cells[1].textContent.toLowerCase();
+        const seance = cells[2].textContent;
+        const salle = cells[3].textContent.toLowerCase();
+        const place = cells[4].textContent.toLowerCase();
+        const categorie = cells[5].textContent.toLowerCase();
+        const statut = cells[7].textContent.toLowerCase();
+        const client = cells[8].textContent.toLowerCase();
 
         // Filtre de recherche
-        const matchesSearch = id.includes(searchTerm) ||
-                             client.includes(searchTerm) ||
-                             email.includes(searchTerm) ||
-                             film.includes(searchTerm);
+        const matchesSearch = film.includes(searchTerm) ||
+                             place.includes(searchTerm) ||
+                             client.includes(searchTerm);
 
         // Filtre de film
         const matchesFilm = !filmFilter || film.includes(filmFilter.toLowerCase());
@@ -151,19 +157,19 @@ function filterReservations() {
         const matchesStatut = !statutFilter || statut.includes(statutFilter.toLowerCase());
 
         // Filtre de date
-        const matchesDate = !dateFilter || dateReservation.includes(dateFilter);
+        const matchesDate = !dateFilter || seance.includes(dateFilter);
 
-        // Filtre de salle
-        const matchesSalle = !salleFilter || salle.includes(salleFilter.toLowerCase());
+        // Filtre de catégorie
+        const matchesCategorie = !categorieFilter || categorie.includes(categorieFilter.toLowerCase());
 
-        const isVisible = matchesSearch && matchesFilm && matchesStatut && matchesDate && matchesSalle;
+        const isVisible = matchesSearch && matchesFilm && matchesStatut && matchesDate && matchesCategorie;
         row.style.display = isVisible ? '' : 'none';
         if (isVisible) visibleCount++;
     });
 
     // Mettre à jour le compteur
     const resultsCount = document.getElementById('resultsCount');
-    resultsCount.textContent = visibleCount + ' réservation(s) trouvée(s)';
+    resultsCount.textContent = visibleCount + ' ticket(s) trouvé(s)';
 }
 
 function clearFilters() {
@@ -171,23 +177,23 @@ function clearFilters() {
     document.getElementById('filmFilter').value = '';
     document.getElementById('statutFilter').value = '';
     document.getElementById('dateFilter').value = '';
-    document.getElementById('salleFilter').value = '';
-    filterReservations();
+    document.getElementById('categorieFilter').value = '';
+    filterTickets();
 }
 
-// Générer les options de films et salles dynamiquement
+// Générer les options de films et catégories dynamiquement
 function populateFilters() {
     const filmSelect = document.getElementById('filmFilter');
-    const salleSelect = document.getElementById('salleFilter');
+    const categorieSelect = document.getElementById('categorieFilter');
     const films = new Set();
-    const salles = new Set();
+    const categories = new Set();
 
     // Collecter toutes les valeurs uniques
     document.querySelectorAll('tbody tr').forEach(row => {
         const cells = row.querySelectorAll('td');
-        if (cells.length >= 8) {
-            films.add(cells[5].textContent.trim());
-            salles.add(cells[7].textContent.trim());
+        if (cells.length >= 6) {
+            films.add(cells[1].textContent.trim());
+            categories.add(cells[5].textContent.trim());
         }
     });
 
@@ -199,18 +205,18 @@ function populateFilters() {
         filmSelect.appendChild(option);
     });
 
-    salles.forEach(salle => {
+    categories.forEach(categorie => {
         const option = document.createElement('option');
-        option.value = salle;
-        option.textContent = salle;
-        salleSelect.appendChild(option);
+        option.value = categorie;
+        option.textContent = categorie;
+        categorieSelect.appendChild(option);
     });
 }
 
 // Initialiser au chargement
 document.addEventListener('DOMContentLoaded', function() {
     populateFilters();
-    filterReservations();
+    filterTickets();
 });
 </script>
 </body>

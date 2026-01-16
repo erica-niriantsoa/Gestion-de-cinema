@@ -1,227 +1,64 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Séances - Cinéma</title>
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        tr:hover {
-            background-color: #f5f5f5;
-        }
-        .error {
-            color: red;
-            padding: 10px;
-            border: 1px solid red;
-            background-color: #ffe6e6;
-        }
-        
-        /* Styles pour les filtres */
-        .filters-container {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .filter-group {
-            margin-bottom: 15px;
-        }
-        
-        .filter-label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .filter-input, .filter-select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .filter-row {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .filter-col {
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .filter-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary {
-            background: #007bff;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #0056b3;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        
-        /* Bouton Réserver */
-        .btn-reserver {
-            padding: 6px 12px;
-            background: #28a745;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 14px;
-            display: inline-block;
-            transition: all 0.3s;
-        }
-        
-        .btn-reserver:hover {
-            background: #218838;
-            transform: translateY(-2px);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-        }
-        
-        .btn-reserver i {
-            margin-right: 5px;
-        }
-        
-        .langue-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .langue-vf {
-            background-color: #28a745;
-            color: white;
-        }
-        
-        .langue-vo {
-            background-color: #17a2b8;
-            color: white;
-        }
-        
-        .no-results {
-            text-align: center;
-            padding: 40px;
-            color: #6c757d;
-            font-style: italic;
-        }
-        
-        .results-info {
-            margin: 10px 0;
-            color: #666;
-            font-size: 14px;
-        }
-        
-        /* Animation pour le filtrage */
-        .fade-in {
-            animation: fadeIn 0.5s;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        /* Style pour le bouton dans le tableau */
-        .action-cell {
-            text-align: center;
-            min-width: 120px;
-        }
-        
-        /* En-tête du tableau modifié */
-        th:last-child {
-            text-align: center;
-        }
-    </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/common.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/client.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/accueil.css">
 </head>
 <body>
-    <h1>Cinéma - Liste des Séances</h1>
-    
-    <!-- Afficher les erreurs -->
-    <c:if test="${not empty error}">
-        <div class="error">
-            Erreur: ${error}
+    <div class="container">
+        <div class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title"><i class="fas fa-film"></i> Cinéma - Séances Disponibles</h1>
+                <p class="hero-subtitle">Réservez vos places pour les séances à venir</p>
+            </div>
         </div>
-    </c:if>
-    
-    <h2>Liste des Séances</h2>
+        
+        <!-- Afficher les erreurs -->
+        <c:if test="${not empty error}">
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> Erreur: ${error}
+            </div>
+        </c:if>
 
-    <!-- Bouton d'action rapide -->
-    <div style="text-align: center; margin: 20px 0;">
-        <a href="${pageContext.request.contextPath}/client/films" class="btn-reserver" style="background: #007bff;">
-            <i class="fas fa-film"></i> Voir tous les films
-        </a>
-        <a href="${pageContext.request.contextPath}/client/reservationDetail" class="btn-reserver" style="background: #ffc107; color: black;">
-            <i class="fas fa-list"></i> Voir les réservations
-        </a>
-        <a href="${pageContext.request.contextPath}/client/accueil" class="btn-reserver" style="background: #6c757d;">
-            <i class="fas fa-home"></i> Retour à l'accueil
-        </a>
-    </div>
+        <!-- Bouton d'action rapide -->
+        <div class="quick-actions">
+            <a href="${pageContext.request.contextPath}/client/films" class="btn btn-primary">
+                <i class="fas fa-film"></i> Voir tous les films
+            </a>
+            <a href="${pageContext.request.contextPath}/client/reservationDetail" class="btn btn-warning">
+                <i class="fas fa-list"></i> Voir les réservations
+            </a>
+            <a href="${pageContext.request.contextPath}/admin/accueil" class="btn btn-secondary">
+                <i class="fas fa-user-shield"></i> Admin
+            </a>
+        </div>
     
     <!-- Filtres multicritères -->
-    <div class="filters-container">
-        <h3 style="margin-top: 0; color: #333;">Filtres</h3>
+    <div class="card filter-section">
+        <h3 class="filter-title"><i class="fas fa-filter"></i> Filtres de recherche</h3>
         
         <div class="filter-row">
             <div class="filter-col">
-                <label class="filter-label"> Recherche</label>
-                <input type="text" id="searchInput" class="filter-input" 
+                <label class="form-label"><i class="fas fa-search"></i> Recherche</label>
+                <input type="text" id="searchInput" class="form-control" 
                        placeholder="Rechercher par film, salle..." onkeyup="filterSeances()">
             </div>
             
             <div class="filter-col">
-                <label class="filter-label"> Date</label>
-                <input type="date" id="dateFilter" class="filter-input" onchange="filterSeances()">
+                <label class="form-label"><i class="fas fa-calendar"></i> Date</label>
+                <input type="date" id="dateFilter" class="form-control" onchange="filterSeances()">
             </div>
             
             <div class="filter-col">
-                <label class="filter-label">🗣️ Langue</label>
-                <select id="langueFilter" class="filter-select" onchange="filterSeances()">
+                <label class="form-label"><i class="fas fa-language"></i> Langue</label>
+                <select id="langueFilter" class="form-control" onchange="filterSeances()">
                     <option value="">Toutes les langues</option>
                     <option value="VF">Version Française (VF)</option>
                     <option value="VO">Version Originale (VO)</option>
@@ -231,8 +68,8 @@
         
         <div class="filter-row">
             <div class="filter-col">
-                <label class="filter-label">Heure de début</label>
-                <select id="heureFilter" class="filter-select" onchange="filterSeances()">
+                <label class="form-label"><i class="fas fa-clock"></i> Heure de début</label>
+                <select id="heureFilter" class="form-control" onchange="filterSeances()">
                     <option value="">Toutes les heures</option>
                     <option value="matin">Matin (avant 12h)</option>
                     <option value="aprem">Après-midi (12h-18h)</option>
@@ -241,16 +78,16 @@
             </div>
             
             <div class="filter-col">
-                <label class="filter-label">Salle</label>
-                <select id="salleFilter" class="filter-select" onchange="filterSeances()">
+                <label class="form-label"><i class="fas fa-door-open"></i> Salle</label>
+                <select id="salleFilter" class="form-control" onchange="filterSeances()">
                     <option value="">Toutes les salles</option>
                     <!-- Options seront générées dynamiquement en JS -->
                 </select>
             </div>
             
             <div class="filter-col">
-                <label class="filter-label">Durée</label>
-                <select id="dureeFilter" class="filter-select" onchange="filterSeances()">
+                <label class="form-label"><i class="fas fa-hourglass"></i> Durée</label>
+                <select id="dureeFilter" class="form-control" onchange="filterSeances()">
                     <option value="">Toutes les durées</option>
                     <option value="court">Court (< 90 min)</option>
                     <option value="moyen">Moyen (90-120 min)</option>
@@ -261,21 +98,21 @@
         
         <div class="filter-actions">
             <button class="btn btn-primary" onclick="filterSeances()">
-                Appliquer les filtres
+                <i class="fas fa-search"></i> Appliquer les filtres
             </button>
             <button class="btn btn-secondary" onclick="resetFilters()">
-                Réinitialiser
+                <i class="fas fa-redo"></i> Réinitialiser
             </button>
-            <span id="resultsCount" class="results-info"></span>
+            <span id="resultsCount" class="results-count"></span>
         </div>
     </div>
     
     <!-- Tableau des séances -->
-    <div id="seancesTableContainer">
+    <div class="table-wrapper">
+        <div id="seancesTableContainer">
         <c:choose>
             <c:when test="${not empty seances}">
-                <!-- Table original (sera caché après chargement JS) -->
-                <table id="originalTable" border="1">
+                <table class="table" id="originalTable">
                     <thead>
                         <tr>
                             <th>Film</th>
@@ -284,8 +121,8 @@
                             <th>Début</th>
                             <th>Fin</th>
                             <th>Langue</th>
-                            <th>Chiffre d'Affaires</th>
-                            <th>Action</th> <!-- NOUVELLE COLONNE -->
+                            <th>Chiffre d'affaires</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="seancesBody">
@@ -306,7 +143,7 @@
                                             ${row.seance.film.titre}
                                         </c:when>
                                         <c:otherwise>
-                                            <span style="color: gray;">Film non trouvé</span>
+                                            <span class="film-not-found">Film non trouvé</span>
                                         </c:otherwise>
                                     </c:choose>
                                 </td>
@@ -321,7 +158,7 @@
                                             ${row.seance.salle.nom}
                                         </c:when>
                                         <c:otherwise>
-                                            <span style="color: gray;">Salle non trouvée</span>
+                                            <span class="salle-not-found">Salle non trouvée</span>
                                         </c:otherwise>
                                     </c:choose>
                                 </td>
@@ -364,6 +201,7 @@
                 </div>
             </c:otherwise>
         </c:choose>
+        </div>
     </div>
 
     <script>
@@ -570,7 +408,7 @@
                 langueCell.className = 'langue-cell';
                 
                 const revenueCell = newRow.insertCell();
-                revenueCell.textContent = seanceData.revenue.toFixed(2) + ' €';
+                revenueCell.textContent = seanceData.revenue.toFixed(2) + ' AR';
                 revenueCell.className = 'revenue-cell';
                 
                 // Cellule d'action avec le bouton Réserver
@@ -688,5 +526,6 @@
             window.location.href = `${pageContext.request.contextPath}/client/seances/` + seanceId + `/reserver`;
         }
     </script>
+</div>
 </body>
 </html>
