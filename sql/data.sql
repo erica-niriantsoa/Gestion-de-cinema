@@ -1,179 +1,3 @@
-\c postgres;
-DROP DATABASE IF EXISTS cinema;
-CREATE DATABASE cinema;
-\c cinema;
-
--- ------------------------------
--- FILMS & categorieS
--- ------------------------------
-CREATE TABLE film (
-    id SERIAL PRIMARY KEY,
-    titre TEXT NOT NULL,
-    description TEXT,
-    duree_minutes INT,
-    date_sortie DATE,
-    age_min INT DEFAULT 0, -- age minimum conseille
-    langue_originale TEXT -- langue du film
-);
-
--- ------------------------------
--- TYPE DE PLACE
--- ------------------------------
-CREATE TABLE type_place (
-    id SERIAL PRIMARY KEY,
-    libelle TEXT NOT NULL -- STANDARD, VIP, PMR
-);
-
--- ------------------------------
--- CATEGORIE PERSONNE
--- ------------------------------
-CREATE TABLE categorie_personne (
-    id SERIAL PRIMARY KEY,
-    libelle TEXT NOT NULL -- ADULTE, ENFANT, SENIOR...
-);
-
-CREATE TABLE categorie (
-    id SERIAL PRIMARY KEY,
-    libelle TEXT UNIQUE NOT NULL
-);
-
-CREATE TABLE film_categorie (
-    id_film INT REFERENCES film(id) ON DELETE CASCADE,
-    id_categorie INT REFERENCES categorie(id) ON DELETE CASCADE,
-    PRIMARY KEY (id_film, id_categorie)
-);
-
--- ------------------------------
--- SALLES & PLACES
--- ------------------------------
-CREATE TABLE salle (
-    id SERIAL PRIMARY KEY,
-    nom TEXT NOT NULL,
-    capacite INT NOT NULL CHECK (capacite > 0)
-);
-
-CREATE TABLE place (
-    id SERIAL PRIMARY KEY,
-    id_salle INT REFERENCES salle(id) ON DELETE CASCADE,
-    rangee TEXT,
-    numero INT,
-    code_place TEXT,
-    id_type_place INT REFERENCES type_place(id)
-);
-
--- ------------------------------
--- SEANCES
--- ------------------------------
-CREATE TABLE seance (
-    id SERIAL PRIMARY KEY,
-    id_film INT REFERENCES film(id),
-    id_salle INT REFERENCES salle(id),
-    debut TIMESTAMPTZ NOT NULL,
-    fin TIMESTAMPTZ,
-    langue TEXT
-);
-
-CREATE INDEX idx_seance_salle_debut
-ON seance(id_salle, debut);
-
--- ------------------------------
--- PERSONNES (Clients)
--- ------------------------------
-CREATE TABLE personne (
-    id SERIAL PRIMARY KEY,
-    nom_complet TEXT,
-    email TEXT UNIQUE,
-    telephone TEXT,
-    mot_de_passe TEXT,
-    role TEXT CHECK (role IN ('ADMIN', 'CLIENT'))
-);
-
--- ------------------------------
--- STATUTS RESERVATION
--- ------------------------------
-CREATE TABLE statut_reservation (
-    id SERIAL PRIMARY KEY,
-    code TEXT UNIQUE NOT NULL, -- CREEE, EN_ATTENTE, PAYEE, CONFIRMEE, ANNULEE, EXPIREE
-    libelle TEXT NOT NULL
-);
-
--- ------------------------------
--- RESERVATIONS
--- ------------------------------
-CREATE TABLE reservation (
-    id SERIAL PRIMARY KEY,
-    id_personne INT REFERENCES personne(id) NULL, -- nullable pour vente sur place
-    id_seance INT REFERENCES seance(id),
-    id_statut INT REFERENCES statut_reservation(id),
-    montant_total NUMERIC(12,2) DEFAULT 0,
-    date_reservation TIMESTAMPTZ DEFAULT now()
-);
-
--- ------------------------------
--- HISTORIQUE STATUT RESERVATION
--- ------------------------------
-CREATE TABLE historique_statut_reservation (
-    id SERIAL PRIMARY KEY,
-    id_reservation INT REFERENCES reservation(id) ON DELETE CASCADE,
-    id_statut INT REFERENCES statut_reservation(id),
-    date_changement TIMESTAMPTZ DEFAULT now(),
-    change_par INT REFERENCES personne(id)
-);
-
--- ------------------------------
--- STATUTS TICKET
--- ------------------------------
-CREATE TABLE statut_ticket (
-    id SERIAL PRIMARY KEY,
-    code TEXT UNIQUE NOT NULL, -- RESERVE, PAYE, ANNULE, UTILISE, REMBOURSE
-    libelle TEXT NOT NULL
-);
-
--- ------------------------------
--- TICKETS
--- ------------------------------
-CREATE TABLE ticket (
-    id SERIAL PRIMARY KEY,
-    id_reservation INT REFERENCES reservation(id) NULL, -- nullable pour ticket sans reservation
-    id_seance INT REFERENCES seance(id),
-    id_place INT REFERENCES place(id),
-    id_statut INT REFERENCES statut_ticket(id),
-    id_categorie_personne INT REFERENCES categorie_personne(id), -- adulte/enfant
-    prix NUMERIC(10,2) NOT NULL
-);
-
--- ------------------------------
--- HISTORIQUE STATUT TICKET
--- ------------------------------
-CREATE TABLE historique_statut_ticket (
-    id SERIAL PRIMARY KEY,
-    id_ticket INT REFERENCES ticket(id) ON DELETE CASCADE,
-    id_statut INT REFERENCES statut_ticket(id),
-    date_changement TIMESTAMPTZ DEFAULT now(),
-    change_par INT REFERENCES personne(id),
-    commentaire TEXT
-);
-
--- ------------------------------
--- TARIF PAR DEFAUT
--- ------------------------------
-CREATE TABLE tarif_defaut (
-    id SERIAL PRIMARY KEY,
-    id_type_place INT REFERENCES type_place(id),
-    id_categorie_personne INT REFERENCES categorie_personne(id),
-    prix NUMERIC(10,2) NOT NULL
-);
-
--- ------------------------------
--- TARIF SPECIFIQUE PAR SEANCE (OPTIONNEL)
--- ------------------------------
-CREATE TABLE tarif_seance (
-    id SERIAL PRIMARY KEY,
-    id_seance INT REFERENCES seance(id),
-    id_type_place INT REFERENCES type_place(id),
-    id_categorie_personne INT REFERENCES categorie_personne(id),
-    prix NUMERIC(10,2) NOT NULL
-);
 
 -- ------------------------------
 -- DONNÉES
@@ -409,7 +233,7 @@ INSERT INTO historique_statut_ticket (id, id_ticket, id_statut, date_changement,
 -- TARIF PAR DEFAUT
 INSERT INTO tarif_defaut (id, id_type_place, id_categorie_personne, prix) VALUES
 (1, 1, 1, 20000),   -- STANDARD, ADULTE
-(2, 1, 2, 20000),   -- STANDARD, ENFANT
+(2, 1, 2, 15000),   -- STANDARD, ENFANT
 (3, 1, 3, 20000),   -- STANDARD, SENIOR
 (4, 2, 1, 50000),   -- PREMIUM, ADULTE
 (5, 2, 2, 50000),   -- PREMIUM, ENFANT
@@ -425,19 +249,69 @@ INSERT INTO tarif_seance (id, id_seance, id_type_place, id_categorie_personne, p
 (3, 6, 1, 1, 20000),   -- STANDARD, ADULTE, tarif réduit dimanche
 (4, 6, 1, 2, 20000);   -- STANDARD, ENFANT, tarif réduit dimanche
 
--- RESET DES SEQUENCES POUR AUTO-INCREMENT
-SELECT setval('reservation_id_seq', (SELECT MAX(id) FROM reservation));
-SELECT setval('ticket_id_seq', (SELECT MAX(id) FROM ticket));
-SELECT setval('historique_statut_reservation_id_seq', (SELECT MAX(id) FROM historique_statut_reservation));
-SELECT setval('personne_id_seq', (SELECT MAX(id) FROM personne));
-SELECT setval('seance_id_seq', (SELECT MAX(id) FROM seance));
-SELECT setval('place_id_seq', (SELECT MAX(id) FROM place));
-SELECT setval('salle_id_seq', (SELECT MAX(id) FROM salle));
-SELECT setval('film_id_seq', (SELECT MAX(id) FROM film));
-SELECT setval('categorie_id_seq', (SELECT MAX(id) FROM categorie));
-SELECT setval('type_place_id_seq', (SELECT MAX(id) FROM type_place));
-SELECT setval('categorie_personne_id_seq', (SELECT MAX(id) FROM categorie_personne));
-SELECT setval('statut_reservation_id_seq', (SELECT MAX(id) FROM statut_reservation));
-SELECT setval('statut_ticket_id_seq', (SELECT MAX(id) FROM statut_ticket));
-SELECT setval('tarif_defaut_id_seq', (SELECT MAX(id) FROM tarif_defaut));
-SELECT setval('tarif_seance_id_seq', (SELECT MAX(id) FROM tarif_seance));
+
+
+-- ------------------------------
+-- MOYENS DE PAIEMENT (données d'exemple)
+-- ------------------------------
+INSERT INTO moyen_paiement (id, libelle, description) VALUES
+(1, 'CARTE_BANCAIRE', 'Paiement par carte bancaire (Visa, Mastercard)'),
+(2, 'ESPECES', 'Paiement en espèces'),
+(3, 'CHEQUE', 'Paiement par chèque bancaire'),
+(4, 'CHEQUE_CADEAU', 'Chèque cadeau du cinéma'),
+(5, 'CARTE_CADEAU', 'Carte cadeau du cinéma'),
+(6, 'VIREMENT', 'Virement bancaire'),
+(7, 'PAIEMENT_EN_LIGNE', 'Paiement sécurisé en ligne');
+
+-- ------------------------------
+-- PROMOTIONS (données d'exemple - montants en Ariary)
+-- ------------------------------
+INSERT INTO promotion (id, code, libelle, description, type_promotion, valeur, montant_minimum, date_debut, date_fin, utilisations_max, actif) VALUES
+(1, 'ETE2024', 'Promotion été 2024', '15% de réduction pendant l''été', 'POURCENTAGE', 15.00, 0, '2024-06-01', '2024-08-31', 1000, true),
+(2, 'FIDELITE20', 'Fidélité 20%', '20% de réduction fidélité', 'POURCENTAGE', 20.00, 50000, NULL, NULL, NULL, true), -- 50 000 Ar minimum
+(3, 'OFFRE5000', '5 000 Ar de réduction', '5 000 Ar de réduction sur votre commande', 'MONTANT_FIXE', 5000.00, 30000, '2024-01-01', '2024-12-31', 500, true), -- 30 000 Ar minimum
+(4, 'ETUDIANT', 'Tarif étudiant', '10% de réduction pour les étudiants', 'POURCENTAGE', 10.00, 0, NULL, NULL, NULL, true),
+(5, 'MERCREDI', 'Mercredi promo', 'Réduction spéciale le mercredi', 'POURCENTAGE', 25.00, 0, NULL, NULL, NULL, true),
+(6, 'FAMILLE4', 'Pack famille 4', 'Forfait famille 4 personnes', 'OFFRE_SPECIALE', 0, 0, NULL, NULL, 200, true),
+(7, 'PREMIERE', 'Première séance', '10 000 Ar pour la première séance', 'MONTANT_FIXE', 10000.00, 0, '2024-01-01', '2024-12-31', 1000, true);
+
+-- ------------------------------
+-- PAIEMENTS (exemples en Ariary - cohérents avec vos tickets)
+-- ------------------------------
+-- Rappel de vos tickets :
+-- Tickets 1-3 : 20 000 Ar chacun (VIP) = 60 000 Ar
+-- Tickets 4-5 : 50 000 Ar chacun (PREMIUM) = 100 000 Ar
+-- Tickets 6-7 : 20 000 Ar chacun (STANDARD enfant) = 40 000 Ar
+-- Total réservation 2 = 140 000 Ar
+
+INSERT INTO paiement (id, id_reservation, id_moyen_paiement, montant, date_paiement, reference, statut) VALUES
+(1, 1, 1, 60000, '2024-06-14 10:32:00+02', 'CB_TRX_789012', 'ACCEPTE'),      -- 60 000 Ar
+(2, 2, 1, 140000, '2024-06-14 11:46:00+02', 'CB_TRX_789013', 'ACCEPTE'),    -- 140 000 Ar
+(3, 3, 2, 40000, '2024-06-14 14:21:00+02', 'ESP-001', 'ACCEPTE'),           -- 40 000 Ar
+(4, 4, 1, 150000, '2024-06-14 16:11:00+02', 'CB_TRX_789014', 'ACCEPTE'),    -- 150 000 Ar
+(5, 5, 3, 80000, '2024-06-14 18:32:00+02', 'CHQ_456789', 'ACCEPTE');        -- 80 000 Ar
+
+-- ------------------------------
+-- RESERVATION PROMOTION (montants en Ariary)
+-- ------------------------------
+INSERT INTO reservation_promotion (id, id_reservation, id_promotion, montant_reduction, date_utilisation) VALUES
+(1, 1, 1, 9000, '2024-06-14 10:30:00+02'),     -- 15% de 60 000 Ar = 9 000 Ar
+(2, 2, 3, 5000, '2024-06-14 11:45:00+02'),     -- 5 000 Ar de réduction
+(3, 4, 2, 30000, '2024-06-14 16:10:00+02'),    -- 20% de 150 000 Ar = 30 000 Ar
+(4, 5, 4, 8000, '2024-06-14 18:30:00+02');     -- 10% de 80 000 Ar = 8 000 Ar
+
+-- ------------------------------
+-- MISE A JOUR DES RESERVATIONS EXISTANTES (en Ariary)
+-- ------------------------------
+-- Ajuster les montants totaux après application des promotions
+UPDATE reservation SET montant_total = 51000 WHERE id = 1;   -- 60 000 Ar - 9 000 Ar = 51 000 Ar
+UPDATE reservation SET montant_total = 135000 WHERE id = 2;  -- 140 000 Ar - 5 000 Ar = 135 000 Ar
+UPDATE reservation SET montant_total = 120000 WHERE id = 4;  -- 150 000 Ar - 30 000 Ar = 120 000 Ar
+UPDATE reservation SET montant_total = 72000 WHERE id = 5;   -- 80 000 Ar - 8 000 Ar = 72 000 Ar
+
+-- Mettre à jour les utilisations courantes des promotions
+UPDATE promotion SET utilisations_courantes = 1 WHERE id = 1;
+UPDATE promotion SET utilisations_courantes = 1 WHERE id = 2;
+UPDATE promotion SET utilisations_courantes = 1 WHERE id = 3;
+UPDATE promotion SET utilisations_courantes = 1 WHERE id = 4;
+

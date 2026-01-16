@@ -178,3 +178,54 @@ CREATE TABLE tarif_seance (
     prix NUMERIC(10,2) NOT NULL
 );
 
+-- ------------------------------
+-- MOYENS DE PAIEMENT
+-- ------------------------------
+CREATE TABLE moyen_paiement (
+    id SERIAL PRIMARY KEY,
+    libelle TEXT NOT NULL UNIQUE, -- CARTE_BANCAIRE, ESPECES, CHEQUE, VIREMENT, CHEQUE_CADEAU
+    description TEXT
+);
+
+-- ------------------------------
+-- PAIEMENTS
+-- ------------------------------
+CREATE TABLE paiement (
+    id SERIAL PRIMARY KEY,
+    id_reservation INT REFERENCES reservation(id),
+    id_moyen_paiement INT REFERENCES moyen_paiement(id),
+    montant NUMERIC(10,2) NOT NULL CHECK (montant > 0),
+    date_paiement TIMESTAMPTZ DEFAULT now(),
+    reference TEXT, -- numero de transaction, reference de cheque, etc.
+    statut TEXT CHECK (statut IN ('EN_ATTENTE', 'ACCEPTE', 'REFUSE', 'REMBOURSE'))
+);
+
+-- ------------------------------
+-- PROMOTIONS
+-- ------------------------------
+CREATE TABLE promotion (
+    id SERIAL PRIMARY KEY,
+    code TEXT UNIQUE NOT NULL, -- ex: "ETE2024", "FIDELITE10"
+    libelle TEXT NOT NULL, -- ex: "Réduction été 2024", "Code fidélité"
+    description TEXT,
+    type_promotion TEXT CHECK (type_promotion IN ('POURCENTAGE', 'MONTANT_FIXE', 'OFFRE_SPECIALE')),
+    valeur NUMERIC(10,2) NOT NULL, -- 10 pour 10%, 5.00 pour 5€
+    montant_minimum NUMERIC(10,2) DEFAULT 0, -- montant minimum d'achat requis
+    date_debut DATE,
+    date_fin DATE,
+    utilisations_max INT, -- nombre maximum d'utilisations
+    utilisations_courantes INT DEFAULT 0,
+    actif BOOLEAN DEFAULT true,
+    UNIQUE(code)
+);
+
+-- ------------------------------
+-- RESERVATION PROMOTION (table de liaison)
+-- ------------------------------
+CREATE TABLE reservation_promotion (
+    id SERIAL PRIMARY KEY,
+    id_reservation INT REFERENCES reservation(id) ON DELETE CASCADE,
+    id_promotion INT REFERENCES promotion(id),
+    montant_reduction NUMERIC(10,2) NOT NULL,
+    date_utilisation TIMESTAMPTZ DEFAULT now()
+);
