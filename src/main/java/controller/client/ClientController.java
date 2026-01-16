@@ -14,14 +14,16 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
-
+import service.SalleService;
 @Controller
 @RequestMapping("/client")
 public class ClientController {
     
     @Autowired
     private SeanceService seanceService;
-    
+    @Autowired
+    private SalleService salleService;
+
     @GetMapping("/accueil")
     public String getAllSeance(Model model) {
         List<Seance> seances = seanceService.findAll();
@@ -37,7 +39,9 @@ public class ClientController {
             row.put("revenue", seanceService.getRevenueForSeance(s.getId()));
             rows.add(row);
         }
+        Map<String, Double> revenuParSalle = salleService.getRevenueParSalle();
         model.addAttribute("seances", rows);
+        model.addAttribute("revenueParSalle", revenuParSalle);
         return "client/accueil";
     }
     

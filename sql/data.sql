@@ -409,14 +409,14 @@ INSERT INTO historique_statut_ticket (id, id_ticket, id_statut, date_changement,
 -- TARIF PAR DEFAUT
 INSERT INTO tarif_defaut (id, id_type_place, id_categorie_personne, prix) VALUES
 (1, 1, 1, 20000),   -- STANDARD, ADULTE
-(2, 1, 2, 20000),   -- STANDARD, ENFANT
+(2, 1, 2, 15000),   -- STANDARD, ENFANT
 (3, 1, 3, 20000),   -- STANDARD, SENIOR
 (4, 2, 1, 50000),   -- PREMIUM, ADULTE
 (5, 2, 2, 50000),   -- PREMIUM, ENFANT
 (6, 2, 3, 50000),   -- PREMIUM, SENIOR
-(7, 3, 1, 90000),   -- VIP, ADULTE
-(8, 3, 2, 90000),   -- VIP, ENFANT
-(9, 3, 3, 90000);   -- VIP, SENIOR
+(7, 3, 1, 100000),   -- VIP, ADULTE
+(8, 3, 2, 100000),   -- VIP, ENFANT
+(9, 3, 3, 100000);   -- VIP, SENIOR
 
 -- TARIF SPECIFIQUE PAR SEANCE
 INSERT INTO tarif_seance (id, id_seance, id_type_place, id_categorie_personne, prix) VALUES
