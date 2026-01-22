@@ -26,6 +26,7 @@ import entity.Place;
 import entity.Reservation;
 import entity.ReservationComplete;
 import entity.Seance;
+import entity.TarifDefaut;
 import entity.Ticket;
 import repository.TicketRepository;
 import service.CategoriePersonneService;
@@ -99,11 +100,11 @@ public class ReservationController {
 
             // Debug: vérifier le JSON généré
             System.out.println("DEBUG: Categories JSON: " + categoriesJson);
-            // ⚡ Utiliser la vue pour les tarifs calculés
-            //List<ViewTarifDefautAll> tarifs = tarifDefautService.getTousLesTarifs();
-            //System.out.println("DEBUG: tarifs.size() = " + tarifs.size());
-            //String tarifsJson = mapper.writeValueAsString(tarifs);
-            //System.out.println("DEBUG: tarifsJson = " + tarifsJson);
+            List<TarifDefaut> tarifs = tarifDefautService.findAll();
+        
+            String tarifsJson = mapper.writeValueAsString(tarifs);
+
+            model.addAttribute("tarifsJson", tarifsJson);
 
             model.addAttribute("seance", seance);
             model.addAttribute("places", places);
@@ -111,13 +112,11 @@ public class ReservationController {
             model.addAttribute("categories", categories);
             model.addAttribute("categoriesJson", categoriesJson);
             model.addAttribute("pageTitle", "Réservation - " + (seance.getFilm() != null ? seance.getFilm().getTitre() : ""));
-            model.addAttribute("categoriesJson", categoriesJson);
-           // model.addAttribute("tarifsJson", tarifsJson);
-
+            model.addAttribute("tarifDefauts", tarifDefautService.findAll());
             return "client/reservation";
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/client/accueil";
+            return "redirect:/client/seances?error=system";
         }
     }
 

@@ -232,15 +232,15 @@ INSERT INTO historique_statut_ticket (id, id_ticket, id_statut, date_changement,
 
 -- TARIF PAR DEFAUT
 INSERT INTO tarif_defaut (id, id_type_place, id_categorie_personne, prix) VALUES
-(1, 1, 1, 20000),   -- STANDARD, ADULTE
+(1, 1, 1, 30000),   -- STANDARD, ADULTE
 (2, 1, 2, 15000),   -- STANDARD, ENFANT
 (3, 1, 3, 20000),   -- STANDARD, SENIOR
-(4, 2, 1, 50000),   -- PREMIUM, ADULTE
+(4, 2, 1, 40000),   -- PREMIUM, ADULTE
 (5, 2, 2, 50000),   -- PREMIUM, ENFANT
-(6, 2, 3, 50000),   -- PREMIUM, SENIOR
-(7, 3, 1, 90000),   -- VIP, ADULTE
-(8, 3, 2, 90000),   -- VIP, ENFANT
-(9, 3, 3, 90000);   -- VIP, SENIOR
+(6, 2, 3, 30000),   -- PREMIUM, SENIOR
+(7, 3, 1, 50000),   -- VIP, ADULTE
+(8, 3, 2, 50000),   -- VIP, ENFANT
+(9, 3, 3, 45000);   -- VIP, SENIOR
 
 
 INSERT INTO tarif_defaut (id, id_type_place, id_categorie_personne, prix) VALUES
@@ -322,3 +322,21 @@ UPDATE promotion SET utilisations_courantes = 1 WHERE id = 3;
 UPDATE promotion SET utilisations_courantes = 1 WHERE id = 4;
 
 update tarif_defaut set prix=90000 WHERE id_type_place=3;
+
+
+
+-- Exemple : appliquer un coefficient de 0.5 pour les enfants
+UPDATE tarif_defaut AS t_enfant
+SET prix = ROUND(t_adulte.prix * 0.5)
+FROM tarif_defaut AS t_adulte
+WHERE t_enfant.id_type_place = t_adulte.id_type_place
+  AND t_enfant.id_categorie_personne = 2      -- ENFANT
+  AND t_adulte.id_categorie_personne = 1;    -- ADULTE
+
+-- Si tu veux que les seniors aient un prix différent, par exemple 80% du prix adulte
+UPDATE tarif_defaut AS t_senior
+SET prix = ROUND(t_adulte.prix * 0.8)
+FROM tarif_defaut AS t_adulte
+WHERE t_senior.id_type_place = t_adulte.id_type_place
+  AND t_senior.id_categorie_personne = 3      -- SENIOR
+  AND t_adulte.id_categorie_personne = 1;    -- ADULTE

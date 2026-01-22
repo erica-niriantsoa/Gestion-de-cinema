@@ -177,23 +177,27 @@
                     document.getElementById('totalAmount').textContent = total.toFixed(2) + ' €';
                 }
 
-                const tarifs = JSON.parse('${tarifsJson}'); // JSON depuis le serveur
-
+                const tarifs = JSON.parse('${tarifsJson}');
                 function calculerPrix(place) {
                     const typeId = parseInt(place.typeId);
+                    console.log('Type ID:', typeId);
                     const categorieId = parseInt(place.categorieId);
-
-                    // Chercher le tarif dans la vue
+                    console.log('Categorie ID:', categorieId);
+                    // Chercher dans la liste des tarifs
                     const tarif = tarifs.find(t =>
-                        parseInt(t.idTypePlace) === typeId &&
-                        parseInt(t.idCategoriePersonne) === categorieId
+                        t.typePlace.id === typeId &&
+                        t.categoriePersonne.id === categorieId
                     );
+                    console.log('Tarif trouvé:', tarif);
+                    tarifs.forEach(element => {
+                        console.log('Tarif élément:', element);
+                    });
 
                     if (tarif) {
-                        return parseFloat(tarif.prixCalcule); // ⚡ Utiliser prixCalcule de la vue
+                        return tarif.prix;
                     } else {
                         console.warn(`Aucun tarif trouvé pour typePlace=${typeId}, categorie=${categorieId}`);
-                        return 0;
+                        return 0; // ou un prix par défaut
                     }
                 }
 
