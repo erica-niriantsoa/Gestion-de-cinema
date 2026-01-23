@@ -96,3 +96,7 @@ GROUP BY
     ca.id_societe,
     ca.societe,
     ca.chiffre_affaire;
+
+
+
+    
