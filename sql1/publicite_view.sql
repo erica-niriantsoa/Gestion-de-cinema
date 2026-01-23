@@ -76,6 +76,38 @@ ORDER BY
 
 
 
+------------------------------
+---v_ca_pub_seance_societe 
+-----------------------------
+CREATE OR REPLACE VIEW v_ca_pub_seance_societe AS
+SELECT
+    f.titre                               AS film,
+    DATE(s.debut)                         AS date_diffusion,
+    TO_CHAR(s.debut, 'HH24:MI')           AS heure_diffusion,
+    so.nom                                AS societe,
+
+    COUNT(dp.id)                          AS nb_diffusions,
+
+    COUNT(dp.id) * td.prix               AS ca_pub_seance
+
+FROM seance s
+JOIN film f ON f.id = s.id_film
+
+JOIN diffusion_publicitaire dp 
+     ON dp.id_seance = s.id
+
+JOIN societe so 
+     ON so.id = dp.id_societe
+
+JOIN tarif_diffusion_publicitaire td
+     ON td.id = dp.id_tarif
+
+GROUP BY
+    f.titre,
+    DATE(s.debut),
+    TO_CHAR(s.debut, 'HH24:MI'),
+    so.nom,
+    td.prix;
 
 
 -------------------------------
@@ -90,6 +122,9 @@ FROM v_ca_pub_seance_societe
 GROUP BY
     DATE_TRUNC('month', date_diffusion),
     societe;
+
+
+DROP VIEW IF EXISTS v_solde_publicite_mensuel CASCADE;
 
 ---------------------------
 --v_solde_publicite_mensuel
