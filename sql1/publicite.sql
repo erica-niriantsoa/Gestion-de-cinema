@@ -1,63 +1,125 @@
-CREATE TABLE Societe (
+CREATE TABLE societe (
     id SERIAL PRIMARY KEY,
-    nom TEXT NOT NULL,
+    nom TEXT NOT NULL UNIQUE,
     libelle TEXT
 );
+
 
 CREATE TABLE type_publicite (
     id SERIAL PRIMARY KEY,
-    libelle TEXT NOT NULL
+    libelle TEXT NOT NULL UNIQUE
 );
 
-CREATE TABLE difusion_publicitaire (
+
+CREATE TABLE tarif_diffusion_publicitaire (
     id SERIAL PRIMARY KEY,
-    id_seance INT NOT NULL REFERENCES seance(id),
-    id_societe INT NOT NULL REFERENCES Societe(id),
-    id_type INT NOT NULL REFERENCES type_publicite(id)
+    prix NUMERIC(12,2) NOT NULL CHECK (prix > 0),
+    libelle TEXT NOT NULL,
+    actif BOOLEAN DEFAULT true
 );
 
-CREATE TABLE cout_difusion_publicitaire (
+CREATE TABLE diffusion_publicitaire (
     id SERIAL PRIMARY KEY,
-    prix NUMERIC(10,2) NOT NULL, -- prix avec 2 décimales
-    libelle TEXT
+
+    id_seance INT NOT NULL 
+        REFERENCES seance(id) ON DELETE CASCADE,
+
+    id_societe INT NOT NULL 
+        REFERENCES societe(id) ON DELETE RESTRICT,
+
+    id_type_publicite INT NOT NULL 
+        REFERENCES type_publicite(id) ON DELETE RESTRICT,
+
+    id_tarif INT NOT NULL
+        REFERENCES tarif_diffusion_publicitaire(id) ON DELETE RESTRICT,
+
+    date_diffusion DATE NOT NULL
 );
+
+
+
+CREATE INDEX idx_diffusion_date
+    ON diffusion_publicitaire(date_diffusion);
+
+CREATE INDEX idx_diffusion_societe
+    ON diffusion_publicitaire(id_societe);
 
 
 -- ------------------------------
 -- SOCIETES
 -- ------------------------------
-INSERT INTO Societe (id, nom, libelle) VALUES
-(1, 'Coca-Cola', 'Boissons gazeuses'),
-(2, 'Nike', 'Articles de sport'),
-(3, 'Apple', 'Technologie et électronique'),
-(4, 'McDonalds', 'Restauration rapide');
+INSERT INTO societe (nom, libelle) VALUES
+('Vaniala', 'Entreprise locale'),
+('Lewis', 'Entreprise commerciale');
 
 -- ------------------------------
 -- TYPES DE PUBLICITE
 -- ------------------------------
-INSERT INTO type_publicite (id, libelle) VALUES
-(1, 'Bande-annonce'),
-(2, 'Spot TV'),
-(3, 'Affiche'),
-(4, 'Sponsorisation');
+INSERT INTO type_publicite (libelle) VALUES
+('Bande-annonce'),
+('Spot TV'),
+('Sponsorisation');
+
 
 -- ------------------------------
 -- DIFFUSIONS PUBLICITAIRES
 -- ------------------------------
-INSERT INTO difusion_publicitaire (id, id_seance, id_societe, id_type) VALUES
-(1, 1, 1, 1),  -- Coca-Cola, Bande-annonce, Séance 1
-(2, 2, 2, 2),  -- Nike, Spot TV, Séance 2
-(3, 3, 3, 1),  -- Apple, Bande-annonce, Séance 3
-(4, 4, 4, 3),  -- McDonalds, Affiche, Séance 4
-(5, 5, 1, 2),  -- Coca-Cola, Spot TV, Séance 5
-(6, 6, 2, 1),  -- Nike, Bande-annonce, Séance 6
-(7, 7, 3, 4);  -- Apple, Sponsorisation, Séance 7
+INSERT INTO diffusion_publicitaire
+(id_seance, id_societe, id_type_publicite, id_tarif, date_diffusion)
+VALUES
+(1, 1, 1, 1, '2025-12-01'),
+(2, 2, 2, 1, '2025-12-02'),
+(3, 1, 1, 1, '2025-12-03');   -- ✅ corrigé
 
 -- ------------------------------
 -- COUTS DE DIFFUSION PUBLICITAIRE
 -- ------------------------------
-INSERT INTO cout_difusion_publicitaire (id, prix, libelle) VALUES
-(1, 200000, 'Prix standard par bande-annonce'),
-(2, 200000, 'Prix premium pour spot TV'),
-(3, 200000, 'Prix affichage'),
-(4, 200000, 'Prix sponsorisation spéciale');
+INSERT INTO tarif_diffusion_publicitaire (prix, libelle)
+VALUES (200000, 'Tarif standard par diffusion');
+
+
+SELECT
+    s.nom AS societe,
+    COUNT(*) AS nb_diffusions,
+    SUM(t.prix) AS chiffre_affaire
+FROM diffusion_publicitaire d
+JOIN societe s ON s.id = d.id_societe
+JOIN tarif_diffusion_publicitaire t ON t.id = d.id_tarif
+WHERE d.date_diffusion BETWEEN '2025-12-01' AND '2025-12-31'
+GROUP BY s.nom
+ORDER BY s.nom;
+
+
+CREATE OR REPLACE VIEW v_chiffre_affaire_publicite_mensuel AS
+SELECT
+    DATE_TRUNC('month', d.date_diffusion)::DATE AS mois,
+    s.id                                  AS id_societe,
+    s.nom                                 AS societe,
+    COUNT(d.id)                           AS nombre_diffusions,
+    SUM(t.prix)                           AS chiffre_affaire
+FROM diffusion_publicitaire d
+JOIN societe s 
+    ON s.id = d.id_societe
+JOIN tarif_diffusion_publicitaire t 
+    ON t.id = d.id_tarif
+GROUP BY
+    DATE_TRUNC('month', d.date_diffusion),
+    s.id,
+    s.nom
+ORDER BY
+    mois,
+    societe;
+
+
+CREATE OR REPLACE VIEW v_chiffre_affaire_publicite_mois_total AS
+SELECT
+    DATE_TRUNC('month', d.date_diffusion)::DATE AS mois,
+    COUNT(d.id)                               AS nombre_diffusions,
+    SUM(t.prix)                              AS chiffre_affaire_total
+FROM diffusion_publicitaire d
+JOIN tarif_diffusion_publicitaire t 
+    ON t.id = d.id_tarif
+GROUP BY
+    DATE_TRUNC('month', d.date_diffusion)
+ORDER BY
+    mois;
