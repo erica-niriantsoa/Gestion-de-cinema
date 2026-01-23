@@ -29,7 +29,7 @@ SELECT
     ca.chiffre_affaire,
 
     COALESCE(SUM(p.montant), 0) AS total_paye,
-
+    COALESCE(SUM(p.montant), 0) / NULLIF(ca.chiffre_affaire, 0) * 100 AS pourcentage_paye,
     ca.chiffre_affaire - COALESCE(SUM(p.montant), 0) AS reste_a_payer
 
 FROM v_chiffre_affaire_publicite_mensuel ca
