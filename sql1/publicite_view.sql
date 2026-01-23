@@ -184,99 +184,91 @@ JOIN v_solde_publicite_mensuel vm
  AND vm.mois = DATE_TRUNC('month', c.date_diffusion);
 
 
--- -- ------------------------------
--- -- v_chiffre_affaire_seance_affichage
--- -- ------------------------------
--- CREATE OR REPLACE VIEW v_chiffre_affaire_seance_affichage AS
--- SELECT
---     film,
---     date_diffusion,
---     heure_diffusion,
+---------------------
+--affichage
+---------------------
+CREATE OR REPLACE VIEW v_chiffre_affaire_seance_affichage AS
+SELECT
+    c.film,
+    c.date_diffusion,
+    c.heure_diffusion,
 
---     -- Tickets
---     montant_ticket,
+    -- Tickets encaissés
+    COALESCE(SUM(t.prix),0) AS montant_ticket,
 
---     -- Publicité
---     SUM(ca_diffusion)                   AS ca_pub_total,
---     SUM(montant_paye_diffusion)         AS ca_pub_paye,
---     SUM(reste_a_payer_diffusion)        AS ca_pub_restant,
+    -- Publicité (répartie proportionnellement)
+    SUM(c.ca_diffusion)               AS montant_pub_total,
+    SUM(c.montant_paye_diffusion)     AS montant_pub_paye,
+    SUM(c.reste_a_payer_diffusion)    AS montant_pub_restant,
 
---     -- Total général
---     montant_ticket
---       + SUM(ca_diffusion)               AS ca_total,
---     montant_ticket
---       + SUM(montant_paye_diffusion)     AS ca_encaisse,
---     montant_ticket
---       + SUM(reste_a_payer_diffusion)    AS ca_restant
+    -- Totaux
+    COALESCE(SUM(t.prix),0) + SUM(c.ca_diffusion)            AS ca_total,
+    COALESCE(SUM(t.prix),0) + SUM(c.montant_paye_diffusion)  AS ca_encaisse,
+    COALESCE(SUM(t.prix),0) + SUM(c.reste_a_payer_diffusion) AS ca_restant
 
--- FROM (
---     SELECT
---         s.film,
---         s.date_diffusion,
---         s.heure_diffusion,
+FROM v_ca_pub_seance_societe_final c
 
---         COALESCE(SUM(t.prix),0) AS montant_ticket,
+LEFT JOIN seance s 
+       ON DATE(s.debut) = c.date_diffusion
+      AND TO_CHAR(s.debut,'HH24:MI') = c.heure_diffusion
 
---         p.ca_diffusion,
---         p.montant_paye_diffusion,
---         p.reste_a_payer_diffusion
+LEFT JOIN ticket t 
+       ON t.id_seance = s.id
 
---     FROM v_ca_pub_seance_societe_final p
---     JOIN v_pub_seance_societe s
---          ON s.film=p.film
---         AND s.date_diffusion=p.date_diffusion
---         AND s.heure_diffusion=p.heure_diffusion
---     LEFT JOIN seance se ON se.id=s.id_seance
---     LEFT JOIN ticket t ON t.id_seance=se.id
+LEFT JOIN statut_ticket st
+       ON st.id = t.id_statut
+      AND st.code = 'PAYE'
 
---     GROUP BY
---         s.film, s.date_diffusion, s.heure_diffusion,
---         p.ca_diffusion, p.montant_paye_diffusion, p.reste_a_payer_diffusion
--- ) x
--- GROUP BY
---     film, date_diffusion, heure_diffusion, montant_ticket
--- ORDER BY
---     date_diffusion, heure_diffusion;
+GROUP BY
+    c.film,
+    c.date_diffusion,
+    c.heure_diffusion
+
+ORDER BY
+    c.date_diffusion,
+    c.heure_diffusion;
+
 
 -- ---------------------------------
 -- --v_seance_ticket_publicite
 -- ---------------------------------
--- CREATE OR REPLACE VIEW v_seance_ticket_publicite AS
--- SELECT
---     f.titre                                AS film,
---     DATE(s.debut)                          AS date_diffusion,
---     TO_CHAR(s.debut,'HH24:MI')             AS heure_diffusion,
+CREATE OR REPLACE VIEW v_seance_ticket_publicite AS
+SELECT
+    f.titre                                AS film,
+    DATE(s.debut)                          AS date_diffusion,
+    TO_CHAR(s.debut,'HH24:MI')             AS heure_diffusion,
 
---     -- Tickets
---     COUNT(st.id) AS nb_tickets,
---     COALESCE(SUM(
---         CASE WHEN st.id IS NOT NULL THEN t.prix ELSE 0 END
---     ),0) AS montant_ticket
+    -- Tickets PAYÉS uniquement
+    COUNT(st.id) AS nb_tickets,
+    COALESCE(SUM(
+        CASE WHEN st.id IS NOT NULL THEN t.prix ELSE 0 END
+    ),0) AS montant_ticket,
 
+    -- Publicités
+    COUNT(dp.id)                           AS nb_publicites,
+    STRING_AGG(DISTINCT so.nom, ', ')      AS societes_publicitaires
 
---     -- Publicités
---     COUNT(dp.id)                           AS nb_publicites,
---     STRING_AGG(DISTINCT so.nom, ', ')      AS societes_publicitaires
+FROM seance s
+JOIN film f ON f.id = s.id_film
 
--- FROM seance s
--- JOIN film f ON f.id = s.id_film
+LEFT JOIN ticket t 
+       ON t.id_seance = s.id
 
--- LEFT JOIN ticket t 
---        ON t.id_seance = s.id
+LEFT JOIN statut_ticket st 
+       ON st.id = t.id_statut
+      AND st.code = 'PAYE'
 
--- LEFT JOIN diffusion_publicitaire dp 
---        ON dp.id_seance = s.id
+LEFT JOIN diffusion_publicitaire dp 
+       ON dp.id_seance = s.id
 
--- LEFT JOIN societe so 
---        ON so.id = dp.id_societe
+LEFT JOIN societe so 
+       ON so.id = dp.id_societe
 
--- GROUP BY
---     f.titre,
---     DATE(s.debut),
---     TO_CHAR(s.debut,'HH24:MI')
+GROUP BY
+    f.titre,
+    DATE(s.debut),
+    TO_CHAR(s.debut,'HH24:MI')
 
--- ORDER BY
---     date_diffusion,
---     heure_diffusion;
-
-
+ORDER BY
+    date_diffusion,
+    heure_diffusion;
