@@ -1,6 +1,7 @@
 package controller.admin;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -24,7 +25,9 @@ import entity.Seance;
 import entity.Ticket;
 import repository.ChiffreAffaireTotalMensuelRepository;
 import repository.TicketRepository;
+import service.CAPubliSeanceSeanceSocieteFinalService;
 import service.CategoriePersonneService;
+import service.ChiffreAffaireSeanceAffichageService;
 import service.FilmService;
 import service.PubliciteService;
 import service.ReservationCompleteService;
@@ -67,6 +70,12 @@ public class AdminController {
 
     @Autowired
     private PubliciteService publiciteService;
+
+    @Autowired
+    private CAPubliSeanceSeanceSocieteFinalService caPubliSeanceSeanceSocieteFinalService;
+
+    @Autowired
+    private ChiffreAffaireSeanceAffichageService chiffreAffaireSeanceAffichageService;
 
         @Autowired
     private ChiffreAffaireTotalMensuelRepository chiffreRepo;
@@ -347,5 +356,103 @@ public String gestionPublicite(Model model) {
     return "admin/publicite/liste";
 }
 
+    // ========== CHIFFRE D'AFFAIRE PUBLICITE PAR SEANCE ET SOCIETE ==========
+    /**
+     * Affiche le chiffre d'affaire des publicités par séance et par société
+     * Filtrable par société et par mois
+     */
+    @GetMapping("/publicite/seance-societe")
+    public String chiffreAffairePubliciteSeanceSociete(
+            @RequestParam(value = "societe", required = false) String societe,
+            @RequestParam(value = "mois", required = false) String mois,
+            Model model) {
+        
+        try {
+            java.util.List<CAPubliSeanceSeanceSocieteFinalService.CAPubliSeanceDTO> donnees;
+
+            if (societe != null && !societe.isEmpty() && mois != null && !mois.isEmpty()) {
+                // Filtrer par société et mois
+                YearMonth yearMonth = YearMonth.parse(mois);
+                donnees = caPubliSeanceSeanceSocieteFinalService.findBySocieteAndMoisFormatted(societe, yearMonth);
+                model.addAttribute("filtreApplique", true);
+                model.addAttribute("societeFiltree", societe);
+                model.addAttribute("moisFiltre", mois);
+            } else if (mois != null && !mois.isEmpty()) {
+                // Filtrer par mois uniquement
+                YearMonth yearMonth = YearMonth.parse(mois);
+                donnees = caPubliSeanceSeanceSocieteFinalService.findByMoisFormatted(yearMonth);
+                model.addAttribute("filtreApplique", true);
+                model.addAttribute("moisFiltre", mois);
+            } else {
+                // Afficher tous les enregistrements
+                donnees = caPubliSeanceSeanceSocieteFinalService.findAll()
+                    .stream()
+                    .map(c -> new CAPubliSeanceSeanceSocieteFinalService.CAPubliSeanceDTO(
+                        c.getFilm(),
+                        c.getDateDiffusion(),
+                        c.getHeureDiffusion(),
+                        c.getSociete(),
+                        c.getCaDiffusion(),
+                        c.getPourcentagePaye(),
+                        c.getMontantPayeDiffusion(),
+                        c.getResteAPayerDiffusion()
+                    ))
+                    .collect(java.util.stream.Collectors.toList());
+            }
+
+            model.addAttribute("caPubliSeances", donnees);
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors de la récupération des données: " + e.getMessage());
+        }
+
+        return "admin/publicite/seance-societe";
+    }
+
+    // ========== CHIFFRE D'AFFAIRE TOTAL PAR SEANCE ==========
+    /**
+     * Affiche le chiffre d'affaire total (tickets + publicités) par séance
+     * Filtrable par mois
+     */
+    @GetMapping("/publicite/seance-affichage")
+    public String chiffreAffaireSeanceAffichage(
+            @RequestParam(value = "mois", required = false) String mois,
+            Model model) {
+        
+        try {
+            java.util.List<ChiffreAffaireSeanceAffichageService.ChiffreAffaireSeanceDTO> donnees;
+
+            if (mois != null && !mois.isEmpty()) {
+                // Filtrer par mois
+                YearMonth yearMonth = YearMonth.parse(mois);
+                donnees = chiffreAffaireSeanceAffichageService.findByMoisFormatted(yearMonth);
+                model.addAttribute("filtreApplique", true);
+                model.addAttribute("moisFiltre", mois);
+            } else {
+                // Afficher tous les enregistrements
+                donnees = chiffreAffaireSeanceAffichageService.findAll()
+                    .stream()
+                    .map(c -> new ChiffreAffaireSeanceAffichageService.ChiffreAffaireSeanceDTO(
+                        c.getFilm(),
+                        c.getDateDiffusion(),
+                        c.getHeureDiffusion(),
+                        c.getMontantTicket(),
+                        c.getMontantPubTotal(),
+                        c.getMontantPubPaye(),
+                        c.getMontantPubRestant(),
+                        c.getCaTotal(),
+                        c.getCaEncaisse(),
+                        c.getCaRestant()
+                    ))
+                    .collect(java.util.stream.Collectors.toList());
+            }
+
+            model.addAttribute("caSeances", donnees);
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors de la récupération des données: " + e.getMessage());
+        }
+
+        return "admin/publicite/seance-affichage";
+    }
 
 }
+

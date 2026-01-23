@@ -187,7 +187,7 @@ JOIN v_solde_publicite_mensuel vm
 ---------------------
 --affichage
 ---------------------
-CREATE OR REPLACE VIEW v_chiffre_affaire_seance_affichage AS
+CREATE OR REPLACE VIEW v_chiffre_affaire_seance_affichage  AS
 SELECT
     c.film,
     c.date_diffusion,
@@ -272,3 +272,51 @@ GROUP BY
 ORDER BY
     date_diffusion,
     heure_diffusion;
+
+
+
+
+
+
+
+CREATE OR REPLACE VIEW v_chiffre_affaire_seance_affichage AS
+SELECT
+    s.id AS id_seance,
+    f.titre AS film,
+    DATE(s.debut) AS date_diffusion,
+    TO_CHAR(s.debut,'HH24:MI') AS heure_diffusion,
+
+    -- Tickets encaissés
+    COALESCE(SUM(t.prix),0) AS montant_ticket,
+
+    -- Publicité (répartie proportionnellement)
+    COALESCE(SUM(c.ca_diffusion),0)            AS montant_pub_total,
+    COALESCE(SUM(c.montant_paye_diffusion),0)  AS montant_pub_paye,
+    COALESCE(SUM(c.reste_a_payer_diffusion),0) AS montant_pub_restant,
+
+    -- Totaux
+    COALESCE(SUM(t.prix),0) + COALESCE(SUM(c.ca_diffusion),0)           AS ca_total,
+    COALESCE(SUM(t.prix),0) + COALESCE(SUM(c.montant_paye_diffusion),0) AS ca_encaisse,
+    COALESCE(SUM(t.prix),0) + COALESCE(SUM(c.reste_a_payer_diffusion),0) AS ca_restant
+
+FROM seance s
+JOIN film f 
+      ON f.id = s.id_film
+
+LEFT JOIN v_ca_pub_seance_societe_final c
+       ON DATE(s.debut) = c.date_diffusion
+      AND TO_CHAR(s.debut,'HH24:MI') = c.heure_diffusion
+      AND f.titre = c.film
+
+LEFT JOIN ticket t 
+       ON t.id_seance = s.id
+
+LEFT JOIN statut_ticket st
+       ON st.id = t.id_statut
+      AND st.code = 'PAYE'
+
+GROUP BY
+    s.id, f.titre, DATE(s.debut), TO_CHAR(s.debut,'HH24:MI')
+
+ORDER BY
+    DATE(s.debut), TO_CHAR(s.debut,'HH24:MI');
