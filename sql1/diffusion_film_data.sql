@@ -106,7 +106,7 @@ FROM generate_series(1,50);
 INSERT INTO paiement_publicite
 (id_societe, montant, date_paiement, reference, commentaire)
 VALUES
-(1, 1000000, '2026-01-15', 'PAY-VAN-2026-01', 'Paiement partiel publicité janvier 2026');
+(1, 200000, '2026-01-15', 'PAY-VAN-2026-01', 'Paiement partiel publicité janvier 2026');
 
 
 
@@ -204,3 +204,8 @@ VALUES
 (1, 1000000, '2026-01-15', 'PAY-VAN-2026-01', 'Paiement partiel pub Janvier'),
 (2, 200000,  '2026-01-15', 'PAY-LEW-2026-01', 'Paiement partiel pub Janvier'),
 (3, 200000,  '2026-01-16', 'PAY-SOC-2026-01', 'Paiement partiel pub Janvier');
+
+INSERT INTO paiement_publicite (id_societe, montant, date_paiement, reference, commentaire)
+VALUES
+(1, 300000, '2026-01-15', 'PAY-VAN-2026-01', 'Paiement partiel pub Janvier');
+

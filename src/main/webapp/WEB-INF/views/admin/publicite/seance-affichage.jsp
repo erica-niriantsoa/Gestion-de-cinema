@@ -245,8 +245,8 @@
                         <th class="publicite">Pub Payée</th>
                         <th class="publicite">Pub Restant</th>
                         <th class="totaux">CA Total</th>
-                        <th class="totaux">CA Encaissé</th>
-                        <th class="totaux">CA Restant</th>
+                        <!-- <th class="totaux">CA Encaissé</th> -->
+                        <!-- <th class="totaux">CA Restant</th> -->
                     </tr>
                 </thead>
                 <tbody>
@@ -270,12 +270,12 @@
                             <td class="amount" style="background-color: #f0f0f0; font-weight: bold;">
                                 <fmt:formatNumber value="${seance.caTotal}" type="currency" currencySymbol="Ar" maxFractionDigits="2" />
                             </td>
-                            <td class="amount highlight-positive" style="background-color: #d4edda;">
-                                <fmt:formatNumber value="${seance.caEncaisse}" type="currency" currencySymbol="Ar" maxFractionDigits="2" />
-                            </td>
-                            <td class="amount" style="background-color: #fff3cd; color: #856404; font-weight: bold;">
-                                <fmt:formatNumber value="${seance.caRestant}" type="currency" currencySymbol="Ar" maxFractionDigits="2" />
-                            </td>
+                            <!-- <td class="amount highlight-positive" style="background-color: #d4edda;"> -->
+                                <!-- <fmt:formatNumber value="${seance.caEncaisse}" type="currency" currencySymbol="Ar" maxFractionDigits="2" /> -->
+                            <!-- </td> -->
+                            <!-- <td class="amount" style="background-color: #fff3cd; color: #856404; font-weight: bold;"> -->
+                                <!-- <fmt:formatNumber value="${seance.caRestant}" type="currency" currencySymbol="Ar" maxFractionDigits="2" /> -->
+                            <!-- </td> -->
                         </tr>
                     </c:forEach>
                 </tbody>

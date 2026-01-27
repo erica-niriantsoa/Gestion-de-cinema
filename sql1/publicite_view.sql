@@ -187,46 +187,65 @@ JOIN v_solde_publicite_mensuel vm
 ---------------------
 --affichage
 ---------------------
-CREATE OR REPLACE VIEW v_chiffre_affaire_seance_affichage  AS
+DROP VIEW IF EXISTS v_chiffre_affaire_seance_affichage CASCADE;
+
+CREATE OR REPLACE VIEW v_chiffre_affaire_seance_affichage AS
+WITH 
+-- Sous-requête pour les publicités agrégées par séance
+pub_seance AS (
+    SELECT
+        film,
+        date_diffusion,
+        heure_diffusion,
+        SUM(ca_diffusion) AS montant_pub_total,
+        SUM(montant_paye_diffusion) AS montant_pub_paye,
+        SUM(reste_a_payer_diffusion) AS montant_pub_restant
+    FROM v_ca_pub_seance_societe_final
+    GROUP BY film, date_diffusion, heure_diffusion
+),
+-- Sous-requête pour les tickets agrégés par séance (TOUTES les séances)
+tickets_seance AS (
+    SELECT
+        s.id AS seance_id,
+        f.titre AS film,
+        DATE(s.debut) AS date_diffusion,
+        TO_CHAR(s.debut, 'HH24:MI') AS heure_diffusion,
+        COALESCE(SUM(
+            CASE WHEN st.code = 'PAYE' THEN t.prix ELSE 0 END
+        ), 0) AS montant_ticket
+    FROM seance s
+    JOIN film f ON f.id = s.id_film
+    LEFT JOIN ticket t ON t.id_seance = s.id
+    LEFT JOIN statut_ticket st ON st.id = t.id_statut
+    GROUP BY s.id, f.titre, DATE(s.debut), TO_CHAR(s.debut, 'HH24:MI')
+)
 SELECT
-    c.film,
-    c.date_diffusion,
-    c.heure_diffusion,
+    ts.film,
+    ts.date_diffusion,
+    ts.heure_diffusion,
 
     -- Tickets encaissés
-    COALESCE(SUM(t.prix),0) AS montant_ticket,
+    ts.montant_ticket,
 
-    -- Publicité (répartie proportionnellement)
-    SUM(c.ca_diffusion)               AS montant_pub_total,
-    SUM(c.montant_paye_diffusion)     AS montant_pub_paye,
-    SUM(c.reste_a_payer_diffusion)    AS montant_pub_restant,
+    -- Publicité (déjà agrégée) - 0 si pas de pub
+    COALESCE(p.montant_pub_total, 0) AS montant_pub_total,
+    COALESCE(p.montant_pub_paye, 0) AS montant_pub_paye,
+    COALESCE(p.montant_pub_restant, 0) AS montant_pub_restant,
 
     -- Totaux
-    COALESCE(SUM(t.prix),0) + SUM(c.ca_diffusion)            AS ca_total,
-    COALESCE(SUM(t.prix),0) + SUM(c.montant_paye_diffusion)  AS ca_encaisse,
-    COALESCE(SUM(t.prix),0) + SUM(c.reste_a_payer_diffusion) AS ca_restant
+    ts.montant_ticket + COALESCE(p.montant_pub_total, 0) AS ca_total,
+    ts.montant_ticket + COALESCE(p.montant_pub_paye, 0) AS ca_encaisse,
+    ts.montant_ticket + COALESCE(p.montant_pub_restant, 0) AS ca_restant
 
-FROM v_ca_pub_seance_societe_final c
-
-LEFT JOIN seance s 
-       ON DATE(s.debut) = c.date_diffusion
-      AND TO_CHAR(s.debut,'HH24:MI') = c.heure_diffusion
-
-LEFT JOIN ticket t 
-       ON t.id_seance = s.id
-
-LEFT JOIN statut_ticket st
-       ON st.id = t.id_statut
-      AND st.code = 'PAYE'
-
-GROUP BY
-    c.film,
-    c.date_diffusion,
-    c.heure_diffusion
+FROM tickets_seance ts
+LEFT JOIN pub_seance p 
+    ON p.date_diffusion = ts.date_diffusion
+    AND p.heure_diffusion = ts.heure_diffusion
+    AND p.film = ts.film
 
 ORDER BY
-    c.date_diffusion,
-    c.heure_diffusion;
+    ts.date_diffusion,
+    ts.heure_diffusion;
 
 
 -- ---------------------------------
@@ -277,36 +296,34 @@ ORDER BY
 
 
 
-
-
 CREATE OR REPLACE VIEW v_chiffre_affaire_seance_affichage AS
 SELECT
-    s.id AS id_seance,
-    f.titre AS film,
-    DATE(s.debut) AS date_diffusion,
-    TO_CHAR(s.debut,'HH24:MI') AS heure_diffusion,
+    c.film,
+    c.date_diffusion,
+    c.heure_diffusion,
 
     -- Tickets encaissés
     COALESCE(SUM(t.prix),0) AS montant_ticket,
 
-    -- Publicité (répartie proportionnellement)
-    COALESCE(SUM(c.ca_diffusion),0)            AS montant_pub_total,
-    COALESCE(SUM(c.montant_paye_diffusion),0)  AS montant_pub_paye,
-    COALESCE(SUM(c.reste_a_payer_diffusion),0) AS montant_pub_restant,
+    -- Publicité (répartie proportionnellement selon le chiffre d'affaire pub de la société)
+    SUM(ca.chiffre_affaire) * (SUM(c.ca_diffusion) / NULLIF(SUM(ca.chiffre_affaire),0)) AS montant_pub_total,
+    SUM(ca.total_paye) * (SUM(c.ca_diffusion) / NULLIF(SUM(ca.chiffre_affaire),0)) AS montant_pub_paye,
+    SUM(ca.reste_a_payer) * (SUM(c.ca_diffusion) / NULLIF(SUM(ca.chiffre_affaire),0)) AS montant_pub_restant,
 
     -- Totaux
-    COALESCE(SUM(t.prix),0) + COALESCE(SUM(c.ca_diffusion),0)           AS ca_total,
-    COALESCE(SUM(t.prix),0) + COALESCE(SUM(c.montant_paye_diffusion),0) AS ca_encaisse,
-    COALESCE(SUM(t.prix),0) + COALESCE(SUM(c.reste_a_payer_diffusion),0) AS ca_restant
+    COALESCE(SUM(t.prix),0) + SUM(ca.chiffre_affaire) AS ca_total,
+    COALESCE(SUM(t.prix),0) + SUM(ca.total_paye) AS ca_encaisse,
+    COALESCE(SUM(t.prix),0) + SUM(ca.reste_a_payer) AS ca_restant
 
-FROM seance s
-JOIN film f 
-      ON f.id = s.id_film
+FROM v_ca_pub_seance_societe_final c
 
-LEFT JOIN v_ca_pub_seance_societe_final c
+LEFT JOIN v_solde_publicite_mensuel ca
+    ON ca.id_societe = c.id_societe
+   AND DATE_TRUNC('month', c.date_diffusion) = ca.mois
+
+LEFT JOIN seance s 
        ON DATE(s.debut) = c.date_diffusion
       AND TO_CHAR(s.debut,'HH24:MI') = c.heure_diffusion
-      AND f.titre = c.film
 
 LEFT JOIN ticket t 
        ON t.id_seance = s.id
@@ -316,7 +333,10 @@ LEFT JOIN statut_ticket st
       AND st.code = 'PAYE'
 
 GROUP BY
-    s.id, f.titre, DATE(s.debut), TO_CHAR(s.debut,'HH24:MI')
+    c.film,
+    c.date_diffusion,
+    c.heure_diffusion
 
 ORDER BY
-    DATE(s.debut), TO_CHAR(s.debut,'HH24:MI');
+    c.date_diffusion,
+    c.heure_diffusion;
