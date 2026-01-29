@@ -1,0 +1,12 @@
+-script.sql
+-remise.sql
+-publicite.sql
+-diffusion_film.sql
+
+-view.sql
+-publicite_view.sql
+-diffusion_film_view.sql
+-alea_publicite.sql
+
+-data.sql
+-diffusion_film_data.sql

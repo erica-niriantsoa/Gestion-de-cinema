@@ -40,6 +40,10 @@ LEFT JOIN statut_ticket st ON t.id_statut = st.id
 GROUP BY r.id, p.id, f.id, s.id, sal.id, sr.id;
 
 
+CREATE OR REPLACE VIEW statuts_ticket_actifs AS
+SELECT id FROM statut_ticket 
+WHERE code IN ('RESERVE', 'PAYE', 'UTILISE');
+
 -- Vue pour les places disponibles (VERSION FINALE)
 CREATE OR REPLACE VIEW places_disponibles AS
 SELECT
@@ -67,9 +71,6 @@ AND NOT EXISTS (
     AND t.id_statut IN (SELECT id FROM statuts_ticket_actifs)
 );
 
-CREATE OR REPLACE VIEW statuts_ticket_actifs AS
-SELECT id FROM statut_ticket 
-WHERE code IN ('RESERVE', 'PAYE', 'UTILISE');
 
 -- Vue pour calculer le revenu maximal par séance (basé sur tarif_defaut)
 DROP VIEW IF EXISTS revenu_maximal_seance;

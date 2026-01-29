@@ -1,18 +1,7 @@
--- Mettre à jour le tarif enfant pour les places STANDARD uniquement
-UPDATE tarif_defaut 
-SET prix = 15000 
-WHERE id_type_place = 1          -- STANDARD
-  AND id_categorie_personne = 2; -- ENFANT
-
--- Vérification
-SELECT 
-    tp.libelle as type_place,
-    cp.libelle as categorie_personne,
-    td.prix
-FROM tarif_defaut td
-JOIN type_place tp ON td.id_type_place = tp.id
-JOIN categorie_personne cp ON td.id_categorie_personne = cp.id
-ORDER BY td.id_type_place, td.id_categorie_personne;
+-- UPDATE tarif_defaut 
+-- SET prix = 15000 
+-- WHERE id_type_place = 1
+--   AND id_categorie_personne = 2;
 
 
 -- Supprimer la vue existante si elle existe
@@ -63,90 +52,90 @@ ORDER BY s.debut DESC;
 
 
 
---Créer des réservations payées pour les séances existantes
-INSERT INTO reservation (id_personne, id_seance, id_statut, montant_total, date_reservation) VALUES
--- Séance 1 (id=1): Le Dernier Royaume - Salle 1
-(3, 1, 3, 180000, '2024-06-14 09:00:00+02'),  -- 180,000 Ar
-(4, 1, 3, 120000, '2024-06-14 09:30:00+02'),  -- 120,000 Ar
-(5, 1, 4, 90000, '2024-06-14 10:00:00+02'),   -- 90,000 Ar
+-- --Créer des réservations payées pour les séances existantes
+-- INSERT INTO reservation (id_personne, id_seance, id_statut, montant_total, date_reservation) VALUES
+-- -- Séance 1 (id=1): Le Dernier Royaume - Salle 1
+-- (3, 1, 3, 180000, '2024-06-14 09:00:00+02'),  -- 180,000 Ar
+-- (4, 1, 3, 120000, '2024-06-14 09:30:00+02'),  -- 120,000 Ar
+-- (5, 1, 4, 90000, '2024-06-14 10:00:00+02'),   -- 90,000 Ar
 
--- Séance 2 (id=2): Echos de l'Espace - Salle 2
-(6, 2, 3, 200000, '2024-06-14 11:00:00+02'),  -- 200,000 Ar
-(7, 2, 4, 150000, '2024-06-14 11:30:00+02'),  -- 150,000 Ar
+-- -- Séance 2 (id=2): Echos de l'Espace - Salle 2
+-- (6, 2, 3, 200000, '2024-06-14 11:00:00+02'),  -- 200,000 Ar
+-- (7, 2, 4, 150000, '2024-06-14 11:30:00+02'),  -- 150,000 Ar
 
--- Séance 3 (id=3): Rires a Paris - Salle 3
-(3, 3, 3, 80000, '2024-06-14 12:00:00+02'),   -- 80,000 Ar
-(4, 3, 3, 60000, '2024-06-14 12:30:00+02'),   -- 60,000 Ar
+-- -- Séance 3 (id=3): Rires a Paris - Salle 3
+-- (3, 3, 3, 80000, '2024-06-14 12:00:00+02'),   -- 80,000 Ar
+-- (4, 3, 3, 60000, '2024-06-14 12:30:00+02'),   -- 60,000 Ar
 
--- Séance 5 (id=5): Les Aventuriers du Temps - Salle 5
-(5, 5, 3, 250000, '2024-06-14 13:00:00+02'),  -- 250,000 Ar
+-- -- Séance 5 (id=5): Les Aventuriers du Temps - Salle 5
+-- (5, 5, 3, 250000, '2024-06-14 13:00:00+02'),  -- 250,000 Ar
 
--- Séance 11 (id=11): Le Dernier Royaume VIP - Salle 6
-(6, 11, 4, 300000, '2024-06-14 14:00:00+02'); -- 300,000 Ar
-
-
--- ------------------------------
--- PAIEMENTS pour les nouvelles réservations
--- ------------------------------
--- Note: Les IDs des nouvelles réservations commencent après les 5 existantes
-INSERT INTO paiement (id_reservation, id_moyen_paiement, montant, date_paiement, reference, statut) VALUES
--- Séance 1 (nouvelles réservations 6, 7, 8)
-(6, 1, 180000, '2024-06-14 09:01:00+02', 'CB_TRX_789015', 'ACCEPTE'),
-(7, 1, 120000, '2024-06-14 09:31:00+02', 'CB_TRX_789016', 'ACCEPTE'),
-(8, 2, 90000, '2024-06-14 10:01:00+02', 'ESP-002', 'ACCEPTE'),
-
--- Séance 2 (nouvelles réservations 9, 10)
-(9, 1, 200000, '2024-06-14 11:01:00+02', 'CB_TRX_789017', 'ACCEPTE'),
-(10, 1, 150000, '2024-06-14 11:31:00+02', 'CB_TRX_789018', 'ACCEPTE'),
-
--- Séance 3 (nouvelles réservations 11, 12)
-(11, 2, 80000, '2024-06-14 12:01:00+02', 'ESP-003', 'ACCEPTE'),
-(12, 1, 60000, '2024-06-14 12:31:00+02', 'CB_TRX_789019', 'ACCEPTE'),
-
--- Séance 5 (nouvelle réservation 13)
-(13, 1, 250000, '2024-06-14 13:01:00+02', 'CB_TRX_789020', 'ACCEPTE'),
-
--- Séance 11 (nouvelle réservation 14)
-(14, 1, 300000, '2024-06-14 14:01:00+02', 'CB_TRX_789021', 'ACCEPTE');
+-- -- Séance 11 (id=11): Le Dernier Royaume VIP - Salle 6
+-- (6, 11, 4, 300000, '2024-06-14 14:00:00+02'); -- 300,000 Ar
 
 
--- Vérifier les tickets enfants STANDARD
-SELECT 
-    t.id,
-    cp.libelle as categorie,
-    tp.libelle as type_place,
-    t.prix,
-    CASE 
-        WHEN cp.libelle = 'ENFANT' AND tp.libelle = 'STANDARD' AND t.prix = 15000
-        THEN 'REMISE APPLIQUEE'
-        WHEN cp.libelle = 'ENFANT' AND tp.libelle = 'STANDARD' AND t.prix != 15000
-        THEN ' REMISE NON APPLIQUEE'
-        ELSE 'Autre'
-    END as verification_remise
-FROM ticket t
-JOIN categorie_personne cp ON t.id_categorie_personne = cp.id
-JOIN place pl ON t.id_place = pl.id
-JOIN type_place tp ON pl.id_type_place = tp.id
-WHERE cp.libelle = 'ENFANT' AND tp.libelle = 'STANDARD';
+-- -- ------------------------------
+-- -- PAIEMENTS pour les nouvelles réservations
+-- -- ------------------------------
+-- -- Note: Les IDs des nouvelles réservations commencent après les 5 existantes
+-- INSERT INTO paiement (id_reservation, id_moyen_paiement, montant, date_paiement, reference, statut) VALUES
+-- -- Séance 1 (nouvelles réservations 6, 7, 8)
+-- (6, 1, 180000, '2024-06-14 09:01:00+02', 'CB_TRX_789015', 'ACCEPTE'),
+-- (7, 1, 120000, '2024-06-14 09:31:00+02', 'CB_TRX_789016', 'ACCEPTE'),
+-- (8, 2, 90000, '2024-06-14 10:01:00+02', 'ESP-002', 'ACCEPTE'),
+
+-- -- Séance 2 (nouvelles réservations 9, 10)
+-- (9, 1, 200000, '2024-06-14 11:01:00+02', 'CB_TRX_789017', 'ACCEPTE'),
+-- (10, 1, 150000, '2024-06-14 11:31:00+02', 'CB_TRX_789018', 'ACCEPTE'),
+
+-- -- Séance 3 (nouvelles réservations 11, 12)
+-- (11, 2, 80000, '2024-06-14 12:01:00+02', 'ESP-003', 'ACCEPTE'),
+-- (12, 1, 60000, '2024-06-14 12:31:00+02', 'CB_TRX_789019', 'ACCEPTE'),
+
+-- -- Séance 5 (nouvelle réservation 13)
+-- (13, 1, 250000, '2024-06-14 13:01:00+02', 'CB_TRX_789020', 'ACCEPTE'),
+
+-- -- Séance 11 (nouvelle réservation 14)
+-- (14, 1, 300000, '2024-06-14 14:01:00+02', 'CB_TRX_789021', 'ACCEPTE');
 
 
--- Mettre à jour les tickets enfants STANDARD
-UPDATE ticket 
-SET prix = 15000 
-WHERE id IN (6, 7);
+-- -- Vérifier les tickets enfants STANDARD
+-- SELECT 
+--     t.id,
+--     cp.libelle as categorie,
+--     tp.libelle as type_place,
+--     t.prix,
+--     CASE 
+--         WHEN cp.libelle = 'ENFANT' AND tp.libelle = 'STANDARD' AND t.prix = 15000
+--         THEN 'REMISE APPLIQUEE'
+--         WHEN cp.libelle = 'ENFANT' AND tp.libelle = 'STANDARD' AND t.prix != 15000
+--         THEN ' REMISE NON APPLIQUEE'
+--         ELSE 'Autre'
+--     END as verification_remise
+-- FROM ticket t
+-- JOIN categorie_personne cp ON t.id_categorie_personne = cp.id
+-- JOIN place pl ON t.id_place = pl.id
+-- JOIN type_place tp ON pl.id_type_place = tp.id
+-- WHERE cp.libelle = 'ENFANT' AND tp.libelle = 'STANDARD';
 
--- Vérifier
-SELECT 
-    t.id,
-    cp.libelle as categorie,
-    tp.libelle as type_place,
-    t.prix,
-    CASE 
-        WHEN t.prix = 15000 THEN 'CORRECT'
-        ELSE 'A CORRIGER'
-    END as statut
-FROM ticket t
-JOIN categorie_personne cp ON t.id_categorie_personne = cp.id
-JOIN place pl ON t.id_place = pl.id
-JOIN type_place tp ON pl.id_type_place = tp.id
-WHERE cp.libelle = 'ENFANT' AND tp.libelle = 'STANDARD';
+
+-- -- Mettre à jour les tickets enfants STANDARD
+-- UPDATE ticket 
+-- SET prix = 15000 
+-- WHERE id IN (6, 7);
+
+-- -- Vérifier
+-- SELECT 
+--     t.id,
+--     cp.libelle as categorie,
+--     tp.libelle as type_place,
+--     t.prix,
+--     CASE 
+--         WHEN t.prix = 15000 THEN 'CORRECT'
+--         ELSE 'A CORRIGER'
+--     END as statut
+-- FROM ticket t
+-- JOIN categorie_personne cp ON t.id_categorie_personne = cp.id
+-- JOIN place pl ON t.id_place = pl.id
+-- JOIN type_place tp ON pl.id_type_place = tp.id
+-- WHERE cp.libelle = 'ENFANT' AND tp.libelle = 'STANDARD';

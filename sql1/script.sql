@@ -13,8 +13,8 @@ CREATE TABLE film (
     description TEXT,
     duree_minutes INT,
     date_sortie DATE,
-    age_min INT DEFAULT 0, -- age minimum conseille
-    langue_originale TEXT -- langue du film);
+    age_min INT DEFAULT 0,
+    langue_originale TEXT
 );
 
 

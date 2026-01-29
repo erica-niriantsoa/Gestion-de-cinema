@@ -60,6 +60,23 @@ INSERT INTO salle (id, nom, capacite) VALUES
 (5, 'Salle 5 - IMAX', 150),
 (6, 'Salle VIP - Prestige', 40);
 
+-- ------------------------------
+-- SEANCES
+-- ------------------------------
+INSERT INTO seance (id, id_film, id_salle, debut, fin, langue) VALUES
+(1, 1, 1, '2024-06-14 10:00:00+02', '2024-06-14 12:30:00+02', 'FR'),
+(2, 2, 2, '2024-06-14 11:30:00+02', '2024-06-14 14:10:00+02', 'EN'),
+(3, 3, 3, '2024-06-14 14:00:00+02', '2024-06-14 16:00:00+02', 'FR'),
+(4, 4, 4, '2024-06-14 16:00:00+02', '2024-06-14 18:10:00+02', 'EN'),
+(5, 5, 5, '2024-06-14 18:00:00+02', '2024-06-14 20:30:00+02', 'EN'),
+(6, 6, 1, '2024-06-15 10:00:00+02', '2024-06-15 12:00:00+02', 'FR'),
+(7, 7, 2, '2024-06-15 13:00:00+02', '2024-06-15 15:00:00+02', 'EN'),
+(8, 8, 3, '2024-06-15 16:00:00+02', '2024-06-15 18:00:00+02', 'FR'),
+(9, 9, 4, '2024-06-15 19:00:00+02', '2024-06-15 21:45:00+02', 'EN'),
+(10, 1, 5, '2024-06-16 14:00:00+02', '2024-06-16 16:30:00+02', 'FR'),
+(11, 2, 6, '2024-06-16 18:00:00+02', '2024-06-16 20:40:00+02', 'EN');
+
+
 -- PLACES (séquences continues)
 -- Salle 1: IDs 1-100
 INSERT INTO place (id, id_salle, rangee, numero, code_place, id_type_place) VALUES
@@ -216,17 +233,17 @@ INSERT INTO historique_statut_ticket (id, id_ticket, id_statut, date_changement,
 (5, 8, 1, '2024-06-14 14:20:00+02', 5, 'Reservation creee'),
 (6, 8, 2, '2024-06-14 14:21:00+02', 5, 'Paiement en attente');
 
--- TARIF PAR DEFAUT
-INSERT INTO tarif_defaut (id, id_type_place, id_categorie_personne, prix) VALUES
-(1, 1, 1, 30000),   -- STANDARD, ADULTE
-(2, 1, 2, 15000),   -- STANDARD, ENFANT
-(3, 1, 3, 20000),   -- STANDARD, SENIOR
-(4, 2, 1, 40000),   -- PREMIUM, ADULTE
-(5, 2, 2, 50000),   -- PREMIUM, ENFANT
-(6, 2, 3, 30000),   -- PREMIUM, SENIOR
-(7, 3, 1, 50000),   -- VIP, ADULTE
-(8, 3, 2, 50000),   -- VIP, ENFANT
-(9, 3, 3, 45000);   -- VIP, SENIOR
+-- -- TARIF PAR DEFAUT
+-- INSERT INTO tarif_defaut (id, id_type_place, id_categorie_personne, prix) VALUES
+-- (1, 1, 1, 30000),   -- STANDARD, ADULTE
+-- (2, 1, 2, 15000),   -- STANDARD, ENFANT
+-- (3, 1, 3, 20000),   -- STANDARD, SENIOR
+-- (4, 2, 1, 40000),   -- PREMIUM, ADULTE
+-- (5, 2, 2, 50000),   -- PREMIUM, ENFANT
+-- (6, 2, 3, 30000),   -- PREMIUM, SENIOR
+-- (7, 3, 1, 50000),   -- VIP, ADULTE
+-- (8, 3, 2, 50000),   -- VIP, ENFANT
+-- (9, 3, 3, 45000);   -- VIP, SENIOR
 
 
 INSERT INTO tarif_defaut (id, id_type_place, id_categorie_personne, prix) VALUES
