@@ -17,14 +17,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import entity.DiffusionPublicitaire;
 import entity.Film;
+import entity.Personne;
+import entity.Reservation;
 import entity.ReservationComplete;
 import entity.RevenuMaximalSeance;
 import entity.Salle;
 import entity.Seance;
 import entity.Ticket;
 import repository.ChiffreAffaireTotalMensuelRepository;
+import repository.DiffusionPublicitaireRepository;
+import repository.PersonneRepository;
+import repository.PlaceRepository;
+import repository.ReservationRepository;
+import repository.SocieteRepository;
+import repository.StatutReservationRepository;
+import repository.StatutTicketRepository;
+import repository.TarifDiffusionPublicitaireRepository;
 import repository.TicketRepository;
+import repository.TypePubliciteRepository;
 import service.CAPubliSeanceSeanceSocieteFinalService;
 import service.CategoriePersonneService;
 import service.ChiffreAffaireSeanceAffichageService;
@@ -64,6 +76,33 @@ public class AdminController {
 
     @Autowired
     private TicketRepository ticketRepository;
+
+    @Autowired
+    private ReservationRepository reservationRepository;
+
+    @Autowired
+    private PersonneRepository personneRepository;
+
+    @Autowired
+    private PlaceRepository placeRepository;
+
+    @Autowired
+    private StatutTicketRepository statutTicketRepository;
+
+    @Autowired
+    private StatutReservationRepository statutReservationRepository;
+
+    @Autowired
+    private DiffusionPublicitaireRepository diffusionPublicitaireRepository;
+
+    @Autowired
+    private SocieteRepository societeRepository;
+
+    @Autowired
+    private TypePubliciteRepository typePubliciteRepository;
+
+    @Autowired
+    private TarifDiffusionPublicitaireRepository tarifDiffusionPublicitaireRepository;
 
     @Autowired
     private RevenuMaximalSeanceService revenuMaximalSeanceService;
@@ -318,14 +357,6 @@ public class AdminController {
         return "redirect:/admin/seances";
     }
 
-    // ========== GESTION RESERVATIONS ==========
-    @GetMapping("/reservations")
-    public String listReservations(Model model) {
-        List<ReservationComplete> reservations = reservationCompleteService.findAll();
-        model.addAttribute("reservations", reservations);
-        return "client/reservationDetail";
-    }
-
     // ========== GESTION TICKETS ==========
     @GetMapping("/tickets")
     public String listTickets(Model model) {
@@ -347,7 +378,163 @@ public class AdminController {
         return "admin/tickets/liste";
     }
 
+    @GetMapping("/tickets/nouveau")
+    public String nouveauTicket(Model model) {
+        model.addAttribute("ticket", new Ticket());
+        model.addAttribute("seances", seanceService.findAll());
+        model.addAttribute("places", placeRepository.findAll());
+        model.addAttribute("categories", categoriePersonneService.findAll());
+        model.addAttribute("statuts", statutTicketRepository.findAll());
+        model.addAttribute("reservations", reservationRepository.findAll());
+        return "admin/tickets/formulaire";
+    }
 
+    @GetMapping("/tickets/{id}/editer")
+    public String editerTicket(@PathVariable("id") Integer id, Model model) {
+        Ticket ticket = ticketRepository.findById(id).orElse(null);
+        if (ticket == null) {
+            return "redirect:/admin/tickets?error=notFound";
+        }
+        model.addAttribute("ticket", ticket);
+        model.addAttribute("seances", seanceService.findAll());
+        model.addAttribute("places", placeRepository.findAll());
+        model.addAttribute("categories", categoriePersonneService.findAll());
+        model.addAttribute("statuts", statutTicketRepository.findAll());
+        model.addAttribute("reservations", reservationRepository.findAll());
+        return "admin/tickets/formulaire";
+    }
+
+    @PostMapping("/tickets/sauvegarder")
+    public String sauvegarderTicket(
+            @RequestParam("seanceId") Integer seanceId,
+            @RequestParam("placeId") Integer placeId,
+            @RequestParam("categorieId") Integer categorieId,
+            @RequestParam("statutId") Integer statutId,
+            @RequestParam(value = "reservationId", required = false) Integer reservationId,
+            @RequestParam("prix") java.math.BigDecimal prix,
+            @RequestParam(value = "id", required = false) Integer id,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Ticket ticket = (id != null) ? ticketRepository.findById(id).orElse(new Ticket()) : new Ticket();
+            
+            ticket.setSeance(seanceService.findById(seanceId).orElse(null));
+            ticket.setPlace(placeRepository.findById(placeId).orElse(null));
+            ticket.setCategoriePersonne(categoriePersonneService.findById(categorieId).orElse(null));
+            ticket.setStatut(statutTicketRepository.findById(statutId).orElse(null));
+            if (reservationId != null) {
+                ticket.setReservation(reservationRepository.findById(reservationId).orElse(null));
+            }
+            ticket.setPrix(prix);
+            
+            ticketRepository.save(ticket);
+            redirectAttributes.addFlashAttribute("success", "Ticket enregistré avec succès");
+            return "redirect:/admin/tickets";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+            return "redirect:/admin/tickets/nouveau";
+        }
+    }
+
+    @GetMapping("/tickets/{id}/supprimer")
+    public String supprimerTicket(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
+        try {
+            ticketRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("success", "Ticket supprimé avec succès");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Impossible de supprimer: " + e.getMessage());
+        }
+        return "redirect:/admin/tickets";
+    }
+
+    // ========== GESTION RESERVATIONS (CRUD) ==========
+    @GetMapping("/reservations")
+    public String listReservations(Model model) {
+        List<ReservationComplete> reservations = reservationCompleteService.findAll();
+        model.addAttribute("reservations", reservations);
+        return "client/reservationDetail";
+    }
+
+    @GetMapping("/reservations/liste")
+    public String listeReservationsAdmin(Model model) {
+        List<Reservation> reservations = reservationRepository.findAll();
+        model.addAttribute("reservations", reservations);
+        return "admin/reservations/liste";
+    }
+
+    @GetMapping("/reservations/nouveau")
+    public String nouvelleReservation(Model model) {
+        model.addAttribute("reservation", new Reservation());
+        model.addAttribute("personnes", personneRepository.findAll());
+        model.addAttribute("seances", seanceService.findAll());
+        model.addAttribute("statuts", statutReservationRepository.findAll());
+        return "admin/reservations/formulaire";
+    }
+
+    @GetMapping("/reservations/{id}/editer")
+    public String editerReservation(@PathVariable("id") Integer id, Model model) {
+        Reservation reservation = reservationRepository.findById(id).orElse(null);
+        if (reservation == null) {
+            return "redirect:/admin/reservations/liste?error=notFound";
+        }
+        model.addAttribute("reservation", reservation);
+        model.addAttribute("personnes", personneRepository.findAll());
+        model.addAttribute("seances", seanceService.findAll());
+        model.addAttribute("statuts", statutReservationRepository.findAll());
+        return "admin/reservations/formulaire";
+    }
+
+    @PostMapping("/reservations/sauvegarder")
+    public String sauvegarderReservation(
+            @RequestParam("personneId") Long personneId,
+            @RequestParam("seanceId") Integer seanceId,
+            @RequestParam("statutId") Integer statutId,
+            @RequestParam("montantTotal") java.math.BigDecimal montantTotal,
+            @RequestParam(value = "dateReservation", required = false) String dateReservation,
+            @RequestParam(value = "id", required = false) Integer id,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Reservation reservation = (id != null) ? reservationRepository.findById(id).orElse(new Reservation()) : new Reservation();
+            
+            reservation.setPersonne(personneRepository.findById(personneId).orElse(null));
+            reservation.setSeance(seanceService.findById(seanceId).orElse(null));
+            reservation.setStatut(statutReservationRepository.findById(statutId).orElse(null));
+            reservation.setMontantTotal(montantTotal);
+            
+            if (dateReservation != null && !dateReservation.isEmpty()) {
+                reservation.setDateReservation(ZonedDateTime.parse(dateReservation + ":00+01:00[Europe/Paris]"));
+            } else if (reservation.getDateReservation() == null) {
+                reservation.setDateReservation(ZonedDateTime.now(ZoneId.of("Europe/Paris")));
+            }
+            
+            reservationRepository.save(reservation);
+            redirectAttributes.addFlashAttribute("success", "Réservation enregistrée avec succès");
+            return "redirect:/admin/reservations/liste";
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+            return "redirect:/admin/reservations/nouveau";
+        }
+    }
+
+    @GetMapping("/reservations/{id}/supprimer")
+    public String supprimerReservation(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
+        try {
+            // Vérifier les tickets associés
+            long nbTickets = ticketRepository.countByReservationId(id);
+            if (nbTickets > 0) {
+                redirectAttributes.addFlashAttribute("error", 
+                    "Impossible de supprimer: " + nbTickets + " ticket(s) associé(s)");
+                return "redirect:/admin/reservations/liste";
+            }
+            reservationRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("success", "Réservation supprimée avec succès");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Impossible de supprimer: " + e.getMessage());
+        }
+        return "redirect:/admin/reservations/liste";
+    }
+
+    // ========== GESTION PUBLICITES ==========
 @GetMapping("/publicite")
 public String gestionPublicite(Model model) {
     // Récupérer toutes les données de chiffre d'affaire mensuel formatées
@@ -355,6 +542,69 @@ public String gestionPublicite(Model model) {
     model.addAttribute("chiffres", chiffres);
     return "admin/publicite/liste";
 }
+
+    @GetMapping("/publicite/nouveau")
+    public String nouvellePublicite(Model model) {
+        model.addAttribute("publicite", new DiffusionPublicitaire());
+        model.addAttribute("seances", seanceService.findAll());
+        model.addAttribute("societes", societeRepository.findAll());
+        model.addAttribute("typesPublicite", typePubliciteRepository.findAll());
+        model.addAttribute("tarifs", tarifDiffusionPublicitaireRepository.findAll());
+        return "admin/publicite/formulaire";
+    }
+
+    @GetMapping("/publicite/{id}/editer")
+    public String editerPublicite(@PathVariable("id") Integer id, Model model) {
+        DiffusionPublicitaire publicite = diffusionPublicitaireRepository.findById(id).orElse(null);
+        if (publicite == null) {
+            return "redirect:/admin/publicite?error=notFound";
+        }
+        model.addAttribute("publicite", publicite);
+        model.addAttribute("seances", seanceService.findAll());
+        model.addAttribute("societes", societeRepository.findAll());
+        model.addAttribute("typesPublicite", typePubliciteRepository.findAll());
+        model.addAttribute("tarifs", tarifDiffusionPublicitaireRepository.findAll());
+        return "admin/publicite/formulaire";
+    }
+
+    @PostMapping("/publicite/sauvegarder")
+    public String sauvegarderPublicite(
+            @RequestParam("seanceId") Integer seanceId,
+            @RequestParam("societeId") Integer societeId,
+            @RequestParam("typePubliciteId") Integer typePubliciteId,
+            @RequestParam("tarifId") Integer tarifId,
+            @RequestParam("dateDiffusion") String dateDiffusion,
+            @RequestParam(value = "id", required = false) Integer id,
+            RedirectAttributes redirectAttributes) {
+        try {
+            DiffusionPublicitaire publicite = (id != null) ? diffusionPublicitaireRepository.findById(id).orElse(new DiffusionPublicitaire()) : new DiffusionPublicitaire();
+            
+            publicite.setIdSeance(seanceId);
+            publicite.setSociete(societeRepository.findById(societeId).orElse(null));
+            publicite.setTypePublicite(typePubliciteRepository.findById(typePubliciteId).orElse(null));
+            publicite.setTarif(tarifDiffusionPublicitaireRepository.findById(tarifId).orElse(null));
+            publicite.setDateDiffusion(LocalDate.parse(dateDiffusion));
+            
+            diffusionPublicitaireRepository.save(publicite);
+            redirectAttributes.addFlashAttribute("success", "Publicité enregistrée avec succès");
+            return "redirect:/admin/publicite";
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "Erreur: " + e.getMessage());
+            return "redirect:/admin/publicite/nouveau";
+        }
+    }
+
+    @GetMapping("/publicite/{id}/supprimer")
+    public String supprimerPublicite(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
+        try {
+            diffusionPublicitaireRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("success", "Publicité supprimée avec succès");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Impossible de supprimer: " + e.getMessage());
+        }
+        return "redirect:/admin/publicite";
+    }
 
     // ========== CHIFFRE D'AFFAIRE PUBLICITE PAR SEANCE ET SOCIETE ==========
     /**

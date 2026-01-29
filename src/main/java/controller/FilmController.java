@@ -30,6 +30,11 @@ public class FilmController {
     @Autowired
     private SeanceService SeanceService;
 
+    @GetMapping("")
+    public String home() {
+        return "index";
+    }
+
     @GetMapping("entrer")
     public String hello() {
         return "index";

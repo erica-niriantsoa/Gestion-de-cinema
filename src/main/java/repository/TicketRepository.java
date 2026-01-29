@@ -13,4 +13,5 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> {
     List<Ticket> findBySeance_IdAndPlace_Id(Integer seanceId, Integer placeId);
     List<Ticket> findBySeance_Id(Integer seanceId);
     long countBySeance(Seance seance);
+    long countByReservationId(Integer reservationId);
 }

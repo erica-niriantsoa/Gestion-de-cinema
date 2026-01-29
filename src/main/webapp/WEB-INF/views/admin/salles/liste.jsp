@@ -1,112 +1,139 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<c:set var="currentPage" value="salles" scope="request"/>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Gestion des Salles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Salles - CinéManager</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/common.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-layout.css">
 </head>
 <body>
-    <div class="container">
-        <a href="${pageContext.request.contextPath}/admin/accueil" class="back-link">
-            <i class="fas fa-arrow-left"></i> Retour à l'espace admin
-        </a>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <jsp:include page="../includes/sidebar.jsp"/>
         
-        <div class="header">
-            <div class="header-content">
-                <div class="header-title">
-                    <i class="fas fa-door-open"></i>
-                    <h1>Gestion des Salles</h1>
-                </div>
-                <a href="${pageContext.request.contextPath}/admin/salles/nouveau" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Nouvelle Salle
-                </a>
-            </div>
-        </div>
-        
-        <c:if test="${not empty success}">
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i> ${success}
-            </div>
-        </c:if>
-        
-        <c:if test="${not empty error}">
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-triangle"></i> ${error}
-            </div>
-        </c:if>
-        
-        <div class="quick-actions">
-            <a href="${pageContext.request.contextPath}/admin/sallesDetail" class="btn btn-primary">
-                <i class="fas fa-film"></i> Voir detail Salles
-            </a>
-        </div>
-        <!-- Filtres multicritères -->
-        <div class="card filter-section">
-            <h3 class="filter-title"><i class="fas fa-filter"></i> Filtres de recherche</h3>
-            
-            <div class="filter-row">
-                <div class="filter-col">
-                    <label class="form-label"><i class="fas fa-search"></i> Recherche</label>
-                    <input type="text" id="searchInput" class="form-control" 
-                           placeholder="Rechercher par nom..." onkeyup="filterSalles()">
-                </div>
-                
-                <div class="filter-col">
-                    <label class="form-label"><i class="fas fa-users"></i> Capacité</label>
-                    <select id="capaciteFilter" class="form-control" onchange="filterSalles()">
-                        <option value="">Toutes les capacités</option>
-                        <option value="petite">Petite (< 100 places)</option>
-                        <option value="moyenne">Moyenne (100-200 places)</option>
-                        <option value="grande">Grande (> 200 places)</option>
-                    </select>
-                </div>
-                
-                <div class="filter-actions">
-                    <button type="button" class="btn btn-secondary" onclick="clearFilters()">
-                        <i class="fas fa-times"></i> Effacer les filtres
+        <!-- Contenu Principal -->
+        <main class="admin-content">
+            <!-- Top Bar -->
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
                     </button>
-                    <span id="resultsCount" class="results-count"></span>
+                    <div class="topbar-title">
+                        <h1>Gestion des Salles</h1>
+                        <div class="breadcrumb">
+                            <a href="${pageContext.request.contextPath}/admin/accueil"><i class="fas fa-home"></i></a>
+                            <i class="fas fa-chevron-right"></i>
+                            <span>Salles</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <a href="${pageContext.request.contextPath}/admin/sallesDetail" class="btn-modern btn-secondary-modern">
+                        <i class="fas fa-eye"></i> Détails
+                    </a>
+                    <a href="${pageContext.request.contextPath}/admin/salles/nouveau" class="btn-modern btn-primary-modern">
+                        <i class="fas fa-plus"></i> Nouvelle Salle
+                    </a>
+                </div>
+            </header>
+            
+            <!-- Page Content -->
+            <div class="admin-page">
+                <!-- Alertes -->
+                <c:if test="${not empty success}">
+                    <div class="alert-modern success">
+                        <i class="fas fa-check-circle"></i> ${success}
+                    </div>
+                </c:if>
+                
+                <c:if test="${not empty error}">
+                    <div class="alert-modern error">
+                        <i class="fas fa-exclamation-triangle"></i> ${error}
+                    </div>
+                </c:if>
+                
+                <!-- Filtres -->
+                <div class="filters-card">
+                    <div class="filters-header">
+                        <div class="filters-title">
+                            <i class="fas fa-filter"></i>
+                            <span>Filtres de recherche</span>
+                        </div>
+                        <button type="button" class="btn-ghost" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Effacer
+                        </button>
+                    </div>
+                    <div class="filters-grid">
+                        <div class="filter-group-modern">
+                            <label><i class="fas fa-search"></i> Recherche</label>
+                            <input type="text" id="searchInput" placeholder="Rechercher par nom..." onkeyup="filterSalles()">
+                        </div>
+                        <div class="filter-group-modern">
+                            <label><i class="fas fa-users"></i> Capacité</label>
+                            <select id="capaciteFilter" onchange="filterSalles()">
+                                <option value="">Toutes les capacités</option>
+                                <option value="petite">Petite (< 100 places)</option>
+                                <option value="moyenne">Moyenne (100-200 places)</option>
+                                <option value="grande">Grande (> 200 places)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px; text-align: right;">
+                        <span id="resultsCount" style="color: var(--text-muted); font-size: 0.9rem;"></span>
+                    </div>
+                </div>
+                
+                <!-- Table des salles -->
+                <div class="data-table-container">
+                    <div class="data-table-header">
+                        <div class="data-table-title">
+                            <div class="table-icon">
+                                <i class="fas fa-door-open"></i>
+                            </div>
+                            <h3>Liste des Salles</h3>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nom</th>
+                                <th>Capacité</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <c:forEach var="salle" items="${salles}">
+                                <tr>
+                                    <td>${salle.id}</td>
+                                    <td><strong style="color: var(--text-primary);">${salle.nom}</strong></td>
+                                    <td><span class="status-badge active">${salle.capacite} places</span></td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <a href="${pageContext.request.contextPath}/admin/salles/${salle.id}/editer" 
+                                               class="table-action-btn edit" title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="${pageContext.request.contextPath}/admin/salles/${salle.id}/supprimer" 
+                                               class="table-action-btn delete" title="Supprimer"
+                                               onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette salle ?');">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        </div>
-        
-        <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nom</th>
-                    <th>Capacité</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <c:forEach var="salle" items="${salles}">
-                    <tr>
-                        <td>${salle.id}</td>
-                        <td><strong>${salle.nom}</strong></td>
-                        <td>${salle.capacite} places</td>
-                        <td>
-                            <div class="actions">
-                                <a href="${pageContext.request.contextPath}/admin/salles/${salle.id}/editer" class="btn btn-warning">
-                                    <i class="fas fa-edit"></i> Modifier
-                                </a>
-                                <a href="${pageContext.request.contextPath}/admin/salles/${salle.id}/supprimer" 
-                                   class="btn btn-danger"
-                                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette salle ?');">
-                                    <i class="fas fa-trash"></i> Supprimer
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                </c:forEach>
-            </tbody>
-        </table>
-        </div>
+        </main>
     </div>
 
     <script>
@@ -114,7 +141,7 @@
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         const capaciteFilter = document.getElementById('capaciteFilter').value;
         
-        const rows = document.querySelectorAll('tbody tr');
+        const rows = document.querySelectorAll('.data-table tbody tr');
         let visibleCount = 0;
         
         rows.forEach(row => {
@@ -123,10 +150,8 @@
             const capaciteText = cells[2].textContent;
             const capacite = parseInt(capaciteText.replace(' places', ''));
             
-            // Filtre de recherche
             const matchesSearch = nom.includes(searchTerm);
             
-            // Filtre de capacité
             let matchesCapacite = true;
             if (capaciteFilter) {
                 if (capaciteFilter === 'petite') matchesCapacite = capacite < 100;
@@ -139,9 +164,7 @@
             if (isVisible) visibleCount++;
         });
         
-        // Mettre à jour le compteur
-        const resultsCount = document.getElementById('resultsCount');
-        resultsCount.textContent = visibleCount + ' salle(s) trouvée(s)';
+        document.getElementById('resultsCount').textContent = visibleCount + ' salle(s) trouvée(s)';
     }
     
     function clearFilters() {
@@ -150,7 +173,6 @@
         filterSalles();
     }
     
-    // Initialiser le compteur au chargement
     document.addEventListener('DOMContentLoaded', function() {
         filterSalles();
     });

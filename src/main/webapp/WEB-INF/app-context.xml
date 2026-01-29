@@ -19,7 +19,7 @@
         <property name="driverClassName" value="org.postgresql.Driver" />
         <property name="url" value="jdbc:postgresql://localhost:5432/cinema" />
         <property name="username" value="postgres" />
-        <property name="password" value="tsimbina11" />
+        <property name="password" value="Riantsoa1203" />
     </bean>
 
     <!-- Entity Manager Factory avec Hibernate -->

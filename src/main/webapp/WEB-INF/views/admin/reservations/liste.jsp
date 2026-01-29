@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Réservations - CinéManager</title>
+    <title>Gestion des Réservations - CinéManager</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/common.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-layout.css">
@@ -15,7 +15,7 @@
 <body>
     <div class="admin-wrapper">
         <!-- Sidebar -->
-        <jsp:include page="../admin/includes/sidebar.jsp"/>
+        <jsp:include page="../includes/sidebar.jsp"/>
         
         <!-- Contenu Principal -->
         <main class="admin-content">
@@ -43,43 +43,38 @@
             
             <!-- Page Content -->
             <div class="admin-page">
+                <c:if test="${not empty success}">
+                    <div class="alert-modern success">
+                        <i class="fas fa-check-circle"></i> ${success}
+                    </div>
+                </c:if>
+                <c:if test="${not empty error}">
+                    <div class="alert-modern error">
+                        <i class="fas fa-exclamation-triangle"></i> ${error}
+                    </div>
+                </c:if>
+                
                 <!-- Filtres -->
                 <div class="filters-card">
                     <div class="filters-header">
                         <div class="filters-title">
                             <i class="fas fa-filter"></i>
-                            <span>Filtres de recherche</span>
+                            <span>Filtres</span>
                         </div>
                         <span id="resultsCount" class="status-badge" style="background: rgba(102, 126, 234, 0.15); color: #667eea;"></span>
                     </div>
                     <div class="filters-grid">
                         <div class="filter-group-modern">
                             <label><i class="fas fa-search"></i> Recherche</label>
-                            <input type="text" id="searchInput" placeholder="Client, email, film..." onkeyup="filterReservations()">
-                        </div>
-                        <div class="filter-group-modern">
-                            <label><i class="fas fa-film"></i> Film</label>
-                            <select id="filmFilter" onchange="filterReservations()">
-                                <option value="">Tous les films</option>
-                            </select>
+                            <input type="text" id="searchInput" placeholder="Client, email..." onkeyup="filterTable()">
                         </div>
                         <div class="filter-group-modern">
                             <label><i class="fas fa-tag"></i> Statut</label>
-                            <select id="statutFilter" onchange="filterReservations()">
-                                <option value="">Tous les statuts</option>
+                            <select id="statutFilter" onchange="filterTable()">
+                                <option value="">Tous</option>
                                 <option value="PAYE">Payé</option>
                                 <option value="EN_ATTENTE">En attente</option>
                                 <option value="ANNULE">Annulé</option>
-                            </select>
-                        </div>
-                        <div class="filter-group-modern">
-                            <label><i class="fas fa-calendar"></i> Date de réservation</label>
-                            <input type="date" id="dateFilter" onchange="filterReservations()">
-                        </div>
-                        <div class="filter-group-modern">
-                            <label><i class="fas fa-door-open"></i> Salle</label>
-                            <select id="salleFilter" onchange="filterReservations()">
-                                <option value="">Toutes les salles</option>
                             </select>
                         </div>
                         <div class="filter-actions-modern">
@@ -90,22 +85,25 @@
                     </div>
                 </div>
                 
-                <!-- Table des Réservations -->
+                <!-- Table -->
                 <div class="data-table-container">
                     <div class="data-table-header">
                         <div class="data-table-title">
                             <div class="table-icon">
-                                <i class="fas fa-ticket-alt"></i>
+                                <i class="fas fa-calendar-check"></i>
                             </div>
-                            <h3>Toutes les Réservations</h3>
+                            <h3>Liste des Réservations</h3>
                         </div>
                     </div>
                     
                     <c:if test="${empty reservations}">
                         <div class="empty-state-modern">
-                            <div class="empty-icon"><i class="fas fa-ticket-alt"></i></div>
+                            <div class="empty-icon"><i class="fas fa-calendar-times"></i></div>
                             <h3>Aucune réservation</h3>
-                            <p>Aucune réservation n'a été trouvée</p>
+                            <p>Commencez par créer une nouvelle réservation</p>
+                            <a href="${pageContext.request.contextPath}/admin/reservations/nouveau" class="btn-modern btn-primary-modern">
+                                <i class="fas fa-plus"></i> Nouvelle Réservation
+                            </a>
                         </div>
                     </c:if>
                     
@@ -114,51 +112,60 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
+                                    <th>Client</th>
+                                    <th>Séance</th>
                                     <th>Date Réservation</th>
                                     <th style="text-align: right;">Montant</th>
-                                    <th>Client</th>
-                                    <th>Email</th>
-                                    <th>Film</th>
-                                    <th>Séance</th>
-                                    <th>Salle</th>
                                     <th>Statut</th>
-                                    <th style="text-align: center;">Tickets</th>
+                                    <th style="text-align: center;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <c:forEach var="res" items="${reservations}">
                                     <tr>
-                                        <td><strong>#${res.reservationId}</strong></td>
-                                        <td><c:if test="${res.dateReservation != null}">${res.dateReservationFormatted}</c:if></td>
-                                        <td style="text-align: right; font-family: monospace; font-weight: 600; color: #27ae60;">${res.montantTotal} Ar</td>
-                                        <td><strong style="color: var(--text-primary);">${res.clientNom}</strong></td>
-                                        <td style="color: var(--text-secondary);">${res.clientEmail}</td>
-                                        <td>${res.filmTitre}</td>
-                                        <td><c:if test="${res.seanceDebut != null}">${res.seanceDebutFormatted}</c:if></td>
-                                        <td>${res.salleNom}</td>
+                                        <td><strong>#${res.id}</strong></td>
+                                        <td>
+                                            <strong style="color: var(--text-primary);">${res.personne.nomComplet}</strong>
+                                            <div style="font-size: 0.8rem; color: var(--text-muted);">${res.personne.email}</div>
+                                        </td>
+                                        <td>
+                                            <c:if test="${res.seance != null}">
+                                                ${res.seance.film.titre}
+                                                <div style="font-size: 0.8rem; color: var(--text-muted);">${res.seance.salle.nom}</div>
+                                            </c:if>
+                                        </td>
+                                        <td>${res.dateReservation}</td>
+                                        <td style="text-align: right; font-family: monospace; font-weight: 600; color: #27ae60;">
+                                            ${res.montantTotal} Ar
+                                        </td>
                                         <td>
                                             <c:choose>
-                                                <c:when test="${res.statutReservation == 'PAYE'}">
+                                                <c:when test="${res.statut.code == 'PAYE'}">
                                                     <span class="status-badge" style="background: rgba(39, 174, 96, 0.15); color: #27ae60;">
                                                         <i class="fas fa-check-circle"></i> Payé
                                                     </span>
                                                 </c:when>
-                                                <c:when test="${res.statutReservation == 'EN_ATTENTE'}">
+                                                <c:when test="${res.statut.code == 'EN_ATTENTE'}">
                                                     <span class="status-badge" style="background: rgba(243, 156, 18, 0.15); color: #f39c12;">
                                                         <i class="fas fa-clock"></i> En attente
                                                     </span>
                                                 </c:when>
                                                 <c:otherwise>
                                                     <span class="status-badge" style="background: rgba(231, 76, 60, 0.15); color: #e74c3c;">
-                                                        <i class="fas fa-times-circle"></i> Annulé
+                                                        <i class="fas fa-times-circle"></i> ${res.statut.libelle}
                                                     </span>
                                                 </c:otherwise>
                                             </c:choose>
                                         </td>
                                         <td style="text-align: center;">
-                                            <span class="status-badge" style="background: rgba(102, 126, 234, 0.15); color: #667eea;">
-                                                ${res.nbTickets}
-                                            </span>
+                                            <div class="action-buttons">
+                                                <a href="${pageContext.request.contextPath}/admin/reservations/${res.id}/editer" class="btn-action edit" title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="${pageContext.request.contextPath}/admin/reservations/${res.id}/supprimer" class="btn-action delete" title="Supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?');">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 </c:forEach>
@@ -171,87 +178,32 @@
     </div>
 
 <script>
-function filterReservations() {
+function filterTable() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const filmFilter = document.getElementById('filmFilter').value;
-    const statutFilter = document.getElementById('statutFilter').value;
-    const dateFilter = document.getElementById('dateFilter').value;
-    const salleFilter = document.getElementById('salleFilter').value;
-
+    const statutFilter = document.getElementById('statutFilter').value.toLowerCase();
     const rows = document.querySelectorAll('tbody tr');
     let visibleCount = 0;
 
     rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        const id = cells[0].textContent;
-        const dateReservation = cells[1].textContent.toLowerCase();
-        const client = cells[3].textContent.toLowerCase();
-        const email = cells[4].textContent.toLowerCase();
-        const film = cells[5].textContent.toLowerCase();
-        const salle = cells[7].textContent.toLowerCase();
-        const statut = cells[8].textContent.toLowerCase();
-
-        const matchesSearch = id.includes(searchTerm) ||
-                             client.includes(searchTerm) ||
-                             email.includes(searchTerm) ||
-                             film.includes(searchTerm);
-
-        const matchesFilm = !filmFilter || film.includes(filmFilter.toLowerCase());
-        const matchesStatut = !statutFilter || statut.includes(statutFilter.toLowerCase());
-        const matchesDate = !dateFilter || dateReservation.includes(dateFilter);
-        const matchesSalle = !salleFilter || salle.includes(salleFilter.toLowerCase());
-
-        const isVisible = matchesSearch && matchesFilm && matchesStatut && matchesDate && matchesSalle;
+        const text = row.textContent.toLowerCase();
+        const matchesSearch = text.includes(searchTerm);
+        const matchesStatut = !statutFilter || text.includes(statutFilter);
+        
+        const isVisible = matchesSearch && matchesStatut;
         row.style.display = isVisible ? '' : 'none';
         if (isVisible) visibleCount++;
     });
 
-    const resultsCount = document.getElementById('resultsCount');
-    resultsCount.textContent = visibleCount + ' réservation(s)';
+    document.getElementById('resultsCount').textContent = visibleCount + ' réservation(s)';
 }
 
 function clearFilters() {
     document.getElementById('searchInput').value = '';
-    document.getElementById('filmFilter').value = '';
     document.getElementById('statutFilter').value = '';
-    document.getElementById('dateFilter').value = '';
-    document.getElementById('salleFilter').value = '';
-    filterReservations();
+    filterTable();
 }
 
-function populateFilters() {
-    const filmSelect = document.getElementById('filmFilter');
-    const salleSelect = document.getElementById('salleFilter');
-    const films = new Set();
-    const salles = new Set();
-
-    document.querySelectorAll('tbody tr').forEach(row => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length >= 8) {
-            films.add(cells[5].textContent.trim());
-            salles.add(cells[7].textContent.trim());
-        }
-    });
-
-    films.forEach(film => {
-        const option = document.createElement('option');
-        option.value = film;
-        option.textContent = film;
-        filmSelect.appendChild(option);
-    });
-
-    salles.forEach(salle => {
-        const option = document.createElement('option');
-        option.value = salle;
-        option.textContent = salle;
-        salleSelect.appendChild(option);
-    });
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    populateFilters();
-    filterReservations();
-});
+document.addEventListener('DOMContentLoaded', filterTable);
 </script>
 </body>
 </html>

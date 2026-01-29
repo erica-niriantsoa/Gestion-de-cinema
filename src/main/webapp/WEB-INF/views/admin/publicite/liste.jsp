@@ -1,186 +1,126 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-
+<c:set var="currentPage" value="publicite" scope="request"/>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Solde publicité par mois</title>
-    <link rel="stylesheet" href="<c:url value='/css/style.css'/>">
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            padding: 20px; 
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 { 
-            color: #333; 
-            margin-bottom: 30px;
-            border-bottom: 3px solid #007bff;
-            padding-bottom: 10px;
-        }
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
-        .card.blue {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .card.green {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        .card.orange {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-        .card h2 {
-            margin: 0 0 10px 0;
-            font-size: 20px;
-        }
-        .card p {
-            margin: 0;
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        .card .icon {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-        table { 
-            border-collapse: collapse; 
-            width: 100%; 
-            margin-top: 20px;
-        }
-        th, td { 
-            border: 1px solid #ccc; 
-            padding: 12px; 
-            text-align: left;
-        }
-        th { 
-            background-color: #007bff; 
-            color: white;
-            font-weight: bold;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
-            background-color: #e8f4f8;
-        }
-        .actions { 
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .btn { 
-            display: inline-block; 
-            padding: 10px 15px; 
-            background-color: #007bff; 
-            color: #fff; 
-            text-decoration: none; 
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .btn:hover { 
-            background-color: #0056b3; 
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-        }
-        .btn-secondary:hover {
-            background-color: #545b62;
-        }
-        .amount {
-            text-align: right;
-            font-family: 'Courier New', monospace;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Publicités - CinéManager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/common.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-layout.css">
 </head>
 <body>
-    <div class="container">
-        <h1>📊 Gestion des Publicités</h1>
-
-        <!-- Dashboard Cards -->
-        <div class="dashboard">
-            <a href="<c:url value='/admin/publicite/seance-societe'/>" class="card blue">
-                <div class="icon">🏢</div>
-                <h2>Par Société</h2>
-                <p>Chiffre d'affaire par séance et société</p>
-            </a>
-
-            <a href="<c:url value='/admin/publicite/seance-affichage'/>" class="card green">
-                <div class="icon">💰</div>
-                <h2>Vue Complète</h2>
-                <p>Total des revenues (tickets + pub)</p>
-            </a>
-
-            <a href="<c:url value='/admin/accueil'/>" class="card orange">
-                <div class="icon">📈</div>
-                <h2>Tableau de Bord</h2>
-                <p>Retour au tableau de bord principal</p>
-            </a>
-        </div>
-
-        <hr style="margin: 30px 0; border: none; border-top: 2px solid #ddd;">
-
-        <h1>Solde publicité par mois</h1>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Mois</th>
-                    <th>Société</th>
-                    <th class="amount">Chiffre d'affaire</th>
-                    <th class="amount">Total payé</th>
-                    <th class="amount">Reste à payer</th>
-                </tr>
-            </thead>
-            <tbody>
-                <c:forEach var="s" items="${chiffres}">
-                    <tr>
-                        <td>${s.mois}</td>
-                        <td>${s.societe}</td>
-                        <td class="amount">${s.chiffreAffaire}</td>
-                        <td class="amount">${s.totalPaye}</td>
-                        <td class="amount">${s.resteAPayer}</td>
-                    </tr>
-                </c:forEach>
-            </tbody>
-        </table>
-
-        <div class="actions">
-            <a href="<c:url value='/admin/accueil'/>" class="btn">Retour à l'accueil</a>
-        </div>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <jsp:include page="../includes/sidebar.jsp"/>
+        
+        <!-- Contenu Principal -->
+        <main class="admin-content">
+            <!-- Top Bar -->
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="topbar-title">
+                        <h1>Gestion des Publicités</h1>
+                        <div class="breadcrumb">
+                            <a href="${pageContext.request.contextPath}/admin/accueil"><i class="fas fa-home"></i></a>
+                            <i class="fas fa-chevron-right"></i>
+                            <span>Publicités</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <a href="${pageContext.request.contextPath}/admin/publicite/nouveau" class="btn-modern btn-primary-modern">
+                        <i class="fas fa-plus"></i> Nouvelle Publicité
+                    </a>
+                </div>
+            </header>
+            
+            <!-- Page Content -->
+            <div class="admin-page">
+                <c:if test="${not empty success}">
+                    <div class="alert-modern success">
+                        <i class="fas fa-check-circle"></i> ${success}
+                    </div>
+                </c:if>
+                <c:if test="${not empty error}">
+                    <div class="alert-modern error">
+                        <i class="fas fa-exclamation-triangle"></i> ${error}
+                    </div>
+                </c:if>
+                
+                <!-- Quick Actions -->
+                <div class="quick-actions-grid" style="margin-bottom: 32px;">
+                    <a href="${pageContext.request.contextPath}/admin/publicite/seance-societe" class="quick-action-card">
+                        <div class="quick-action-icon" style="background: rgba(102, 126, 234, 0.15); color: #667eea;">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="quick-action-text">
+                            <h4>Par Société</h4>
+                            <p>CA par séance et société</p>
+                        </div>
+                    </a>
+                    
+                    <a href="${pageContext.request.contextPath}/admin/publicite/seance-affichage" class="quick-action-card">
+                        <div class="quick-action-icon" style="background: rgba(39, 174, 96, 0.15); color: #27ae60;">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="quick-action-text">
+                            <h4>Vue Complète</h4>
+                            <p>Total des revenues (tickets + pub)</p>
+                        </div>
+                    </a>
+                    
+                    <a href="${pageContext.request.contextPath}/admin/accueil" class="quick-action-card">
+                        <div class="quick-action-icon" style="background: rgba(243, 156, 18, 0.15); color: #f39c12;">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="quick-action-text">
+                            <h4>Tableau de Bord</h4>
+                            <p>Retour au dashboard principal</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Table du solde publicité -->
+                <div class="data-table-container">
+                    <div class="data-table-header">
+                        <div class="data-table-title">
+                            <div class="table-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <h3>Solde publicité par mois</h3>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mois</th>
+                                <th>Société</th>
+                                <th style="text-align: right;">Chiffre d'affaire</th>
+                                <th style="text-align: right;">Total payé</th>
+                                <th style="text-align: right;">Reste à payer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <c:forEach var="s" items="${chiffres}">
+                                <tr>
+                                    <td><strong style="color: var(--text-primary);">${s.mois}</strong></td>
+                                    <td>${s.societe}</td>
+                                    <td style="text-align: right; font-family: monospace;">${s.chiffreAffaire}</td>
+                                    <td style="text-align: right; font-family: monospace; color: #27ae60;">${s.totalPaye}</td>
+                                    <td style="text-align: right; font-family: monospace; color: #e74c3c;">${s.resteAPayer}</td>
+                                </tr>
+                            </c:forEach>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
 </body>
 </html>
