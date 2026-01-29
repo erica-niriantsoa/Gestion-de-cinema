@@ -14,7 +14,7 @@ import repository.ChiffreAffaireSeanceAffichageRepository;
 
 /**
  * Service pour gérer les données de la vue v_chiffre_affaire_seance_affichage
- * Chiffre d'affaire total (tickets + publicités) par séance
+ * Chiffre d'affaire total (tickets + publicités + produits extra) par séance
  */
 @Service
 public class ChiffreAffaireSeanceAffichageService {
@@ -49,8 +49,9 @@ public class ChiffreAffaireSeanceAffichageService {
      * Récupère les données pour un mois donné
      */
     public List<ChiffreAffaireSeanceAffichage> findByMois(YearMonth mois) {
-        LocalDate moisLocalDate = mois.atDay(1);
-        return repository.findByMois(moisLocalDate);
+        LocalDate debutMois = mois.atDay(1);
+        LocalDate finMois = mois.atEndOfMonth();
+        return repository.findByMois(debutMois, finMois);
     }
 
     /**
@@ -78,6 +79,7 @@ public class ChiffreAffaireSeanceAffichageService {
         private java.math.BigDecimal montantPubTotal;
         private java.math.BigDecimal montantPubPaye;
         private java.math.BigDecimal montantPubRestant;
+        private java.math.BigDecimal montantExtra;
         private java.math.BigDecimal caTotal;
         private java.math.BigDecimal caEncaisse;
         private java.math.BigDecimal caRestant;
@@ -85,6 +87,7 @@ public class ChiffreAffaireSeanceAffichageService {
         public ChiffreAffaireSeanceDTO(String film, LocalDate dateDiffusion, String heureDiffusion,
                                       java.math.BigDecimal montantTicket, java.math.BigDecimal montantPubTotal,
                                       java.math.BigDecimal montantPubPaye, java.math.BigDecimal montantPubRestant,
+                                      java.math.BigDecimal montantExtra,
                                       java.math.BigDecimal caTotal, java.math.BigDecimal caEncaisse,
                                       java.math.BigDecimal caRestant) {
             this.film = film;
@@ -94,6 +97,7 @@ public class ChiffreAffaireSeanceAffichageService {
             this.montantPubTotal = montantPubTotal;
             this.montantPubPaye = montantPubPaye;
             this.montantPubRestant = montantPubRestant;
+            this.montantExtra = montantExtra;
             this.caTotal = caTotal;
             this.caEncaisse = caEncaisse;
             this.caRestant = caRestant;
@@ -107,6 +111,7 @@ public class ChiffreAffaireSeanceAffichageService {
         public java.math.BigDecimal getMontantPubTotal() { return montantPubTotal; }
         public java.math.BigDecimal getMontantPubPaye() { return montantPubPaye; }
         public java.math.BigDecimal getMontantPubRestant() { return montantPubRestant; }
+        public java.math.BigDecimal getMontantExtra() { return montantExtra; }
         public java.math.BigDecimal getCaTotal() { return caTotal; }
         public java.math.BigDecimal getCaEncaisse() { return caEncaisse; }
         public java.math.BigDecimal getCaRestant() { return caRestant; }
@@ -125,6 +130,7 @@ public class ChiffreAffaireSeanceAffichageService {
                 c.getMontantPubTotal(),
                 c.getMontantPubPaye(),
                 c.getMontantPubRestant(),
+                c.getMontantExtra(),
                 c.getCaTotal(),
                 c.getCaEncaisse(),
                 c.getCaRestant()
@@ -145,6 +151,7 @@ public class ChiffreAffaireSeanceAffichageService {
                 c.getMontantPubTotal(),
                 c.getMontantPubPaye(),
                 c.getMontantPubRestant(),
+                c.getMontantExtra(),
                 c.getCaTotal(),
                 c.getCaEncaisse(),
                 c.getCaRestant()

@@ -19,7 +19,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import entity.DiffusionPublicitaire;
 import entity.Film;
-import entity.Personne;
 import entity.Reservation;
 import entity.ReservationComplete;
 import entity.RevenuMaximalSeance;
@@ -660,7 +659,7 @@ public String gestionPublicite(Model model) {
 
     // ========== CHIFFRE D'AFFAIRE TOTAL PAR SEANCE ==========
     /**
-     * Affiche le chiffre d'affaire total (tickets + publicités) par séance
+     * Affiche le chiffre d'affaire total (tickets + publicités + extras) par séance
      * Filtrable par mois
      */
     @GetMapping("/publicite/seance-affichage")
@@ -689,6 +688,7 @@ public String gestionPublicite(Model model) {
                         c.getMontantPubTotal(),
                         c.getMontantPubPaye(),
                         c.getMontantPubRestant(),
+                        c.getMontantExtra(),
                         c.getCaTotal(),
                         c.getCaEncaisse(),
                         c.getCaRestant()

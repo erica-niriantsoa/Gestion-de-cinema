@@ -36,11 +36,14 @@ public interface ChiffreAffaireSeanceAffichageRepository
 
     /**
      * Récupère tous les enregistrements pour un mois donné
+     * Utilise BETWEEN avec le premier et dernier jour du mois
      */
     @Query("SELECT c FROM ChiffreAffaireSeanceAffichage c " +
-           "WHERE FUNCTION('DATE_TRUNC', 'month', c.dateDiffusion) = FUNCTION('DATE_TRUNC', 'month', :mois) " +
+           "WHERE c.dateDiffusion BETWEEN :debutMois AND :finMois " +
            "ORDER BY c.dateDiffusion, c.heureDiffusion")
-    List<ChiffreAffaireSeanceAffichage> findByMois(@Param("mois") LocalDate mois);
+    List<ChiffreAffaireSeanceAffichage> findByMois(
+        @Param("debutMois") LocalDate debutMois,
+        @Param("finMois") LocalDate finMois);
 
     /**
      * Récupère tous les enregistrements pour un film et une date donnée

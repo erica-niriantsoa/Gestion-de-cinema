@@ -83,6 +83,7 @@
                     <c:set var="totalMontantPubTotal" value="0" />
                     <c:set var="totalMontantPubPaye" value="0" />
                     <c:set var="totalMontantPubRestant" value="0" />
+                    <c:set var="totalMontantExtra" value="0" />
                     <c:set var="totalCaTotal" value="0" />
                     <c:set var="totalCaEncaisse" value="0" />
                     <c:set var="totalCaRestant" value="0" />
@@ -92,6 +93,7 @@
                         <c:set var="totalMontantPubTotal" value="${totalMontantPubTotal + seance.montantPubTotal}" />
                         <c:set var="totalMontantPubPaye" value="${totalMontantPubPaye + seance.montantPubPaye}" />
                         <c:set var="totalMontantPubRestant" value="${totalMontantPubRestant + seance.montantPubRestant}" />
+                        <c:set var="totalMontantExtra" value="${totalMontantExtra + seance.montantExtra}" />
                         <c:set var="totalCaTotal" value="${totalCaTotal + seance.caTotal}" />
                         <c:set var="totalCaEncaisse" value="${totalCaEncaisse + seance.caEncaisse}" />
                         <c:set var="totalCaRestant" value="${totalCaRestant + seance.caRestant}" />
@@ -114,6 +116,15 @@
                             <div class="stat-info">
                                 <span class="stat-label">Total Publicités</span>
                                 <span class="stat-value"><fmt:formatNumber value="${totalMontantPubTotal}" type="number" maxFractionDigits="0" /> Ar</span>
+                            </div>
+                        </div>
+                        <div class="stat-card-modern">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #ff9a56 0%, #ff6b6b 100%);">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-label">Total Extras</span>
+                                <span class="stat-value"><fmt:formatNumber value="${totalMontantExtra}" type="number" maxFractionDigits="0" /> Ar</span>
                             </div>
                         </div>
                         <div class="stat-card-modern">
@@ -153,7 +164,7 @@
                             <div class="table-icon">
                                 <i class="fas fa-chart-bar"></i>
                             </div>
-                            <h3>Détail par Séance (Tickets + Publicités)</h3>
+                            <h3>Détail par Séance (Tickets + Publicités + Extras)</h3>
                         </div>
                     </div>
                     
@@ -176,6 +187,7 @@
                                     <th style="text-align: right; background: rgba(240, 147, 251, 0.3);">Pub Total</th>
                                     <th style="text-align: right; background: rgba(240, 147, 251, 0.3);">Pub Payée</th>
                                     <th style="text-align: right; background: rgba(240, 147, 251, 0.3);">Pub Restant</th>
+                                    <th style="text-align: right; background: rgba(255, 154, 86, 0.3);">Extras</th>
                                     <th style="text-align: right; background: rgba(17, 153, 142, 0.3);">CA Total</th>
                                 </tr>
                             </thead>
@@ -196,6 +208,9 @@
                                         </td>
                                         <td style="text-align: right; font-family: monospace; color: #e67e22;">
                                             <fmt:formatNumber value="${seance.montantPubRestant}" type="currency" currencySymbol="Ar " maxFractionDigits="2" />
+                                        </td>
+                                        <td style="text-align: right; font-family: monospace; color: #ff6b6b;">
+                                            <fmt:formatNumber value="${seance.montantExtra}" type="currency" currencySymbol="Ar " maxFractionDigits="2" />
                                         </td>
                                         <td style="text-align: right; font-family: monospace; font-weight: bold; background: rgba(17, 153, 142, 0.1);">
                                             <fmt:formatNumber value="${seance.caTotal}" type="currency" currencySymbol="Ar " maxFractionDigits="2" />

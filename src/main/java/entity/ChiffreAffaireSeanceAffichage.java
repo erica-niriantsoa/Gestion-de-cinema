@@ -11,7 +11,7 @@ import jakarta.persistence.Table;
 
 /**
  * Entité basée sur la vue v_chiffre_affaire_seance_affichage
- * Représente le chiffre d'affaire total (tickets + publicités) par séance
+ * Représente le chiffre d'affaire total (tickets + publicités + produits extra) par séance
  */
 @Entity
 @Table(name = "v_chiffre_affaire_seance_affichage")
@@ -42,6 +42,9 @@ public class ChiffreAffaireSeanceAffichage {
     @Column(name = "montant_pub_restant")
     private BigDecimal montantPubRestant;
 
+    @Column(name = "montant_extra")
+    private BigDecimal montantExtra;
+
     @Column(name = "ca_total")
     private BigDecimal caTotal;
 
@@ -58,6 +61,7 @@ public class ChiffreAffaireSeanceAffichage {
     public ChiffreAffaireSeanceAffichage(String film, LocalDate dateDiffusion, String heureDiffusion,
                                         BigDecimal montantTicket, BigDecimal montantPubTotal,
                                         BigDecimal montantPubPaye, BigDecimal montantPubRestant,
+                                        BigDecimal montantExtra,
                                         BigDecimal caTotal, BigDecimal caEncaisse, BigDecimal caRestant) {
         this.film = film;
         this.dateDiffusion = dateDiffusion;
@@ -66,6 +70,7 @@ public class ChiffreAffaireSeanceAffichage {
         this.montantPubTotal = montantPubTotal;
         this.montantPubPaye = montantPubPaye;
         this.montantPubRestant = montantPubRestant;
+        this.montantExtra = montantExtra;
         this.caTotal = caTotal;
         this.caEncaisse = caEncaisse;
         this.caRestant = caRestant;
@@ -126,6 +131,14 @@ public class ChiffreAffaireSeanceAffichage {
 
     public void setMontantPubRestant(BigDecimal montantPubRestant) {
         this.montantPubRestant = montantPubRestant;
+    }
+
+    public BigDecimal getMontantExtra() {
+        return montantExtra;
+    }
+
+    public void setMontantExtra(BigDecimal montantExtra) {
+        this.montantExtra = montantExtra;
     }
 
     public BigDecimal getCaTotal() {
